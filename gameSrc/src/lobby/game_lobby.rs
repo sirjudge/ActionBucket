@@ -14,8 +14,7 @@ pub enum GameType {
 
 #[derive(Default, Component, Clone, Debug, PartialEq)]
 pub struct LobbyConfigurationOptions {
-    numberOfPlayersInLobby: i16,
-    numberOfPlayersAllowedInGame: i16,
-    gameType: GameType
-
+    number_of_players_in_lobby: i16,
+    number_of_players_allowed_in_game: i16,
+    game_type: GameType
 }
