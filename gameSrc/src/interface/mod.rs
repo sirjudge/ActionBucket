@@ -7,21 +7,12 @@ pub mod pallette;
 
 
 #[derive(States, Copy, Clone, Eq, PartialEq, Hash, Debug, Default)]
-pub enum Menu {
+pub enum MenuTypes {
     #[default]
     None,
     Main,
-    Credits,
     Settings,
-    Pause,
-}
-
-/// The game's main screen states.
-#[derive(States, Copy, Clone, Eq, PartialEq, Hash, Debug, Default)]
-pub enum Screen {
-    #[default]
-    Splash,
-    Title,
-    Loading,
-    Gameplay,
+    InGamePause,
+    InLobby,
+    JoinLobby,
 }

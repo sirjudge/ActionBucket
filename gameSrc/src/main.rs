@@ -30,7 +30,8 @@ impl Plugin for AppPlugin {
             // Add other plugins.
         app.add_plugins((
             infra::audio::plugin,
-            interface::main_menu::plugin
+            // interface::main_menu::plugin
+            interface::lobby_menu::plugin
         ));
 
         // Order new `AppSystems` variants by adding them here:

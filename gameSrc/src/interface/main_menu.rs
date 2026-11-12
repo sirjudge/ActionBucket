@@ -36,6 +36,8 @@ fn setup(mut commands: Commands) {
                 Text::new("New Lobby"),
                 observe(|_activate: On<Activate>| {
                     info!("New Lobby button pushed");
+                    //TODO: need to despawn everything here and swap 
+                    //to lobby instead
                 }),
                 Node { ..default() },
             ));
