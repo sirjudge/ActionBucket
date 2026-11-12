@@ -1,7 +1,9 @@
 use bevy::prelude::*;
-mod main_menu;
-mod lobby_menu;
-mod fight_ui;
+
+pub mod main_menu;
+pub mod fight_ui;
+pub mod lobby_menu;
+pub mod pallette;
 
 
 #[derive(States, Copy, Clone, Eq, PartialEq, Hash, Debug, Default)]

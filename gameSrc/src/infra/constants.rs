@@ -1,3 +1,5 @@
+use bevy::color::Color;
+
 pub const GRID_SIZE: f32 = 16.0;
 pub const PLAYER_HEIGHT: f32 = 32.0;
 pub const DEBUG_LOG: bool = false;
@@ -16,3 +18,6 @@ pub const NPC_SPEED: f32 = 100.0;
 // so we can tweak them independently down the line and since both are
 // constants it should just work hopefully
 pub const ENEMY_SPEED: f32 = 100.0;
+
+
+
