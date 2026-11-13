@@ -8,7 +8,7 @@ pub enum GameType {
     Time,
 }
 
-#[derive(Default, Component, Clone, Debug, PartialEq)]
+#[derive(Resource, Default, Clone, Debug, PartialEq)]
 pub struct Lobby {
     total_players_allowed_in_lobby: i16,
     number_of_players_allowed_in_game: i16,

@@ -3,11 +3,17 @@ use bevy::{
     ui_widgets::{Activate, Button, observe},
 };
 
+use crate::InterfaceState;
+
+#[derive(Component)]
 pub struct MainMenuPlugin;
 
-pub fn plugin(app: &mut App) {
-    app.insert_state(CurrentlySelectedOption::NewLobby)
-        .add_systems(Startup, setup);
+impl Plugin for MainMenuPlugin {
+    fn build(&self, app: &mut App) {
+        app.insert_state(CurrentlySelectedOption::NewLobby)
+            .add_systems(Startup, spawn_main_menu.run_if(in_state(InterfaceState::MainMenu)))
+            .add_systems(Update,despawn_menu);
+    }
 }
 
 #[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
@@ -19,7 +25,17 @@ pub enum CurrentlySelectedOption {
     Exit,
 }
 
-fn setup(mut commands: Commands) {
+fn spawn_main_menu(
+    mut commands: Commands,
+    state: ResMut<State<InterfaceState>>,
+    mut next_state: ResMut<NextState<InterfaceState>>,
+) {
+
+    // if states are the same no set up required?
+    if state.eq(&InterfaceState::MainMenu){
+        debug!("returned early from main menu set up because the state was already main menu")
+    }
+
     commands.spawn(Camera2d);
     commands
         .spawn((Node {
@@ -36,8 +52,9 @@ fn setup(mut commands: Commands) {
                 Text::new("New Lobby"),
                 observe(|_activate: On<Activate>| {
                     info!("New Lobby button pushed");
-                    //TODO: need to despawn everything here and swap 
+                    //TODO: need to despawn everything here and swap
                     //to lobby instead
+                    next_state.set(InterfaceState::InLobby);
                 }),
                 Node { ..default() },
             ));
@@ -69,4 +86,17 @@ fn setup(mut commands: Commands) {
                 Node { ..default() },
             ));
         });
+    next_state.set(InterfaceState::MainMenu);
+}
+
+
+fn despawn_menu(
+    mut commands: Commands,
+    state: ResMut<State<InterfaceState>>,
+    menu_query: Query<Entity, With<MainMenuPlugin>>,
+) {
+    // if the current interface is lobby + we can get the root menu entity despawn
+    if state.eq(&InterfaceState::InLobby) && let Ok(_) = menu_query.single() {
+        commands.despawn_all::<With<MainMenuPlugin>>();
+    }
 }
