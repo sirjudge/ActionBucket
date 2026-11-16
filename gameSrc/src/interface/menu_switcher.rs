@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::InterfaceState;
+use crate::{InterfaceState, interface::main_menu::MainMenuPlugin};
 
 #[derive(Message)]
 pub struct MenuSwapMessage {
@@ -27,14 +27,54 @@ fn swap_message_reader(
     mut message_reader: MessageReader<MenuSwapMessage>,
     state: ResMut<State<InterfaceState>>,
     mut next_state: ResMut<NextState<InterfaceState>>,
+    menu_query: Query<&MainMenuPlugin>,
+    mut commands: Commands,
 ) {
     for message in message_reader.read() {
         // if we have the same states don't swap
-        let log_message = format!("Recieved swap interface message: {:?}",message.next_state);
+        let log_message = format!("Recieved swap interface message: {:?}", message.next_state);
         info!(log_message);
         if &message.next_state == state.get() {
             return;
         }
         next_state.set(message.next_state.clone());
+
+        match state.get() {
+            InterfaceState::Startup => todo!(),
+            InterfaceState::MainMenu => {
+                // if the current interface is lobby + we can get the root menu entity despawn
+                if state.eq(&InterfaceState::MainMenu)
+                    && let Ok(_) = menu_query.single()
+                {
+                    commands.despawn_all::<With<MainMenuPlugin>>();
+                }
+            },
+            InterfaceState::Settings => todo!(),
+            InterfaceState::JoinLobby => todo!(),
+            InterfaceState::CreateLobby => todo!(),
+            InterfaceState::InLobby => todo!(),
+            InterfaceState::InGame => todo!(),
+            InterfaceState::Loading => todo!(),
+        }
+
+        match message.next_state {
+            InterfaceState::Startup => todo!(),
+            InterfaceState::MainMenu => {
+                match menu_query.single(){
+                    Ok(menu) => {
+                    },
+                    Err(_) => todo!(),
+                }
+                // if let Ok(menu) = menu_query.single() {
+                //     menu
+                // }
+            },
+            InterfaceState::Settings => todo!(),
+            InterfaceState::JoinLobby => todo!(),
+            InterfaceState::CreateLobby => todo!(),
+            InterfaceState::InLobby => todo!(),
+            InterfaceState::InGame => todo!(),
+            InterfaceState::Loading => todo!(),
+        }
     }
 }

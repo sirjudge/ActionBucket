@@ -1,5 +1,4 @@
 use bevy::{
-    ecs::message,
     prelude::*,
     ui_widgets::{Activate, Button, observe},
 };
@@ -15,8 +14,7 @@ impl Plugin for MainMenuPlugin {
             .add_systems(
                 Startup,
                 spawn_main_menu.run_if(in_state(InterfaceState::MainMenu)),
-            )
-            .add_systems(Update, despawn_menu);
+            );
     }
 }
 
@@ -34,9 +32,8 @@ fn spawn_main_menu(
     state: ResMut<State<InterfaceState>>,
     mut next_state: ResMut<NextState<InterfaceState>>,
 ) {
-    // if states are the same no set up required?
     if state.eq(&InterfaceState::MainMenu) {
-        debug!("returned early from main menu set up because the state was already main menu")
+        warn!("returned early from main menu set up because the state was already main menu")
     }
 
     commands.spawn(Camera2d);
@@ -102,17 +99,4 @@ fn spawn_main_menu(
             ));
         });
     next_state.set(InterfaceState::MainMenu);
-}
-
-fn despawn_menu(
-    mut commands: Commands,
-    state: ResMut<State<InterfaceState>>,
-    menu_query: Query<Entity, With<MainMenuPlugin>>,
-) {
-    // if the current interface is lobby + we can get the root menu entity despawn
-    if state.eq(&InterfaceState::InLobby)
-        && let Ok(_) = menu_query.single()
-    {
-        commands.despawn_all::<With<MainMenuPlugin>>();
-    }
 }
