@@ -1,6 +1,12 @@
 use bevy::prelude::*;
 
-use crate::{interface::{lobby_menu::LobbyPlugin, main_menu::MainMenuPlugin}, lobby::game_lobby::Lobby};
+use crate::{
+    interface::{
+        lobby_menu::LobbyPlugin,
+        main_menu::MainMenuPlugin,
+        menu_switcher::MenuSwapPlugin
+    }
+};
 
 pub mod game;
 pub mod infra;
@@ -15,13 +21,14 @@ fn main() -> AppExit {
 #[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum InterfaceState {
     #[default]
+    Startup,
     MainMenu,
+    Settings,
     JoinLobby,
     CreateLobby,
     InLobby,
     InGame,
     Loading,
-    Startup,
 }
 
 pub struct AppPlugin;
@@ -45,7 +52,8 @@ impl Plugin for AppPlugin {
         app.add_plugins((
             infra::audio::plugin,
             LobbyPlugin,
-            MainMenuPlugin
+            MainMenuPlugin,
+            MenuSwapPlugin,
         ));
 
         // Order new `AppSystems` variants by adding them here:

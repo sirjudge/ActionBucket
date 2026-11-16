@@ -52,7 +52,7 @@ fn spawn_lobby(
                 Node { ..default() },
                 Button,
                 Name::new("ActionBucket1"),
-                Text::new("Action Bucket"),
+                Text::new("Action Bucket 1"),
                 observe(|_activate: On<Activate>| {
                     info!("action bucket 1 selected");
                 }),
