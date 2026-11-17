@@ -24,7 +24,7 @@ impl Lobby {
         }
     }
 
-    pub(crate) fn new(total_players_allowed_in_lobby:i16,number_of_players_allowed_in_game:i16, game_type: GameType) -> Self {
+    pub fn new(total_players_allowed_in_lobby:i16,number_of_players_allowed_in_game:i16, game_type: GameType) -> Self {
         Self { 
             total_players_allowed_in_lobby,
             number_of_players_allowed_in_game,

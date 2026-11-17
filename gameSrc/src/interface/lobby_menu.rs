@@ -5,7 +5,7 @@ use bevy::{
 };
 
 #[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
-pub enum CurrentlySelectedFighter {
+pub enum CurrentFighterOption {
     #[default]
     Random = 0,
     BucketOne = 1,
@@ -18,20 +18,27 @@ pub enum CurrentlySelectedFighter {
 pub struct LobbyPlugin;
 
 #[derive(Component)]
-pub struct LobbyUi;
+struct LobbyUi;
 
 // https://bevy.org/examples/ui-user-interface/standard-widgets/
 // using this as base
 impl Plugin for LobbyPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_state::<CurrentlySelectedFighter>(CurrentlySelectedFighter::Random)
+        app.insert_state::<CurrentFighterOption>(CurrentFighterOption::Random)
             .insert_resource::<Lobby>(Lobby::default());
 
-        app.add_systems(Update, Self::display_toggle_on_state_update);
+        app.add_systems(
+            Update,
+            (Self::display_toggle_on_state_update, Self::lobby_debug),
+        );
     }
 }
 
 impl LobbyPlugin {
+    fn lobby_debug(selected_fighter_option: ResMut<State<CurrentFighterOption>>) {
+        info!("currently selected_fighter_option: {:?}", selected_fighter_option);
+    }
+
     fn display_toggle_on_state_update(
         mut commands: Commands,
         interface_state: ResMut<State<InterfaceState>>,
@@ -39,7 +46,7 @@ impl LobbyPlugin {
         lobby_query: Query<Entity, With<LobbyUi>>,
     ) {
         match lobby_query.single() {
-            Ok(menu) => {
+            Ok(lobby_ui) => {
                 // lobby UI is already spawned and we're still in the
                 // same lobby state, no work required
                 if interface_state.get() == &InterfaceState::InLobby {
@@ -47,7 +54,7 @@ impl LobbyPlugin {
                 }
 
                 if interface_state.get().ne(&InterfaceState::InLobby) {
-                    commands.entity(menu).despawn();
+                    commands.entity(lobby_ui).despawn();
                     debug!("Successfully despawned lobby menu");
                 }
             }
@@ -64,14 +71,16 @@ impl LobbyPlugin {
                     "interface state is in lobby but could not find lobby menu:{:?}",
                     error
                 );
-                Self::spawn_lobby(commands, interface_state, next_state);
+                // Self::spawn_lobby(commands, next_state, next_fighter_option_state);
+                Self::spawn_lobby(commands, next_state);
             }
         }
     }
+
     fn spawn_lobby(
         mut commands: Commands,
-        interface_state: ResMut<State<InterfaceState>>,
         mut next_state: ResMut<NextState<InterfaceState>>,
+        // mut next_fighter_option_state: ResMut<NextState<CurrentFighterOption>>,
     ) {
         commands
             .spawn((
@@ -91,8 +100,9 @@ impl LobbyPlugin {
                     Button,
                     Name::new("ActionBucket1"),
                     Text::new("Action Bucket 1"),
-                    observe(|_activate: On<Activate>| {
+                    observe(|_activate: On<Activate>,mut next_fighter_option_state: ResMut<'_, NextState<CurrentFighterOption>> | {
                         info!("action bucket 1 selected");
+                        next_fighter_option_state.set(CurrentFighterOption::BucketOne);
                     }),
                 ));
                 parent.spawn((
@@ -100,8 +110,9 @@ impl LobbyPlugin {
                     Button,
                     Name::new("ActionBucket2"),
                     Text::new("Action Bucket 2"),
-                    observe(|_activate: On<Activate>| {
+                    observe(|_activate: On<Activate>,mut next_fighter_option_state: ResMut<'_, NextState<CurrentFighterOption>> | {
                         info!("action bucket 2 selected");
+                        next_fighter_option_state.set(CurrentFighterOption::BucketTwo);
                     }),
                 ));
                 parent.spawn((
@@ -109,8 +120,9 @@ impl LobbyPlugin {
                     Button,
                     Name::new("ActionBucket3"),
                     Text::new("Action Bucket 3"),
-                    observe(|_activate: On<Activate>| {
+                    observe(|_activate: On<Activate>,mut next_fighter_option_state: ResMut<'_, NextState<CurrentFighterOption>> | {
                         info!("action bucket 3 selected");
+                        next_fighter_option_state.set(CurrentFighterOption::BucketThree);
                     }),
                 ));
                 parent.spawn((
@@ -118,8 +130,9 @@ impl LobbyPlugin {
                     Button,
                     Name::new("ActionBucket4"),
                     Text::new("Action Bucket 4"),
-                    observe(|_activate: On<Activate>| {
+                    observe(|_activate: On<Activate>,mut next_fighter_option_state: ResMut<'_, NextState<CurrentFighterOption>> | {
                         info!("action bucket 4 selected");
+                        next_fighter_option_state.set(CurrentFighterOption::BucketFour);
                     }),
                 ));
 
@@ -158,8 +171,9 @@ impl LobbyPlugin {
                             Button,
                             Name::new("QuitToMenuButton"),
                             Text::new("Quit To Main Menu"),
-                            observe(|_activate: On<Activate>| {
+                            observe(|_activate: On<Activate>, mut next_state: ResMut<NextState<InterfaceState>> | {
                                 info!("quit to menu button pushed");
+                                next_state.set(InterfaceState::MainMenu);
                             }),
                         ));
                     });
