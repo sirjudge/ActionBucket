@@ -23,6 +23,9 @@ impl Plugin for MenuSwapPlugin {
     }
 }
 
+//TODO: Need to think about having some kind of save state change here 
+// something like prevState: InterfaceState
+// Keep blindly swapping as is for now
 fn swap_message_reader(
     mut message_reader: MessageReader<MenuSwapMessage>,
     state: ResMut<State<InterfaceState>>,
@@ -71,7 +74,13 @@ fn swap_message_reader(
             },
             InterfaceState::Settings => todo!(),
             InterfaceState::JoinLobby => todo!(),
-            InterfaceState::CreateLobby => todo!(),
+            InterfaceState::CreateLobby =>{
+                info!("Creating lobby. . .beep boop. . .");
+                //TODO: Do networking things here to make lobby joinable by friends or support
+                info!("Lobby created");
+                next_state.set(InterfaceState::InLobby);
+
+            },
             InterfaceState::InLobby => todo!(),
             InterfaceState::InGame => todo!(),
             InterfaceState::Loading => todo!(),

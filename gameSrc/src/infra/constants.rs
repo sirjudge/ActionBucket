@@ -1,5 +1,3 @@
-use bevy::color::Color;
-
 pub const GRID_SIZE: f32 = 16.0;
 pub const PLAYER_HEIGHT: f32 = 32.0;
 pub const DEBUG_LOG: bool = false;

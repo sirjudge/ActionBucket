@@ -1,19 +1,11 @@
+use std::default;
+
+use crate::{InterfaceState, interface::menu_switcher::MenuSwapMessage};
 use bevy::{
+    ecs::system::{command::despawn_all, entity_command::despawn},
     prelude::*,
     ui_widgets::{Activate, Button, observe},
 };
-
-use crate::{InterfaceState, interface::menu_switcher::MenuSwapMessage};
-
-#[derive(Component)]
-pub struct MainMenuPlugin;
-
-impl Plugin for MainMenuPlugin {
-    fn build(&self, app: &mut App) {
-        app.insert_state(CurrentlySelectedOption::NewLobby)
-            .add_systems(Update,update_menu.run_if(in_state(InterfaceState::InLobby)));
-    }
-}
 
 #[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum CurrentlySelectedOption {
@@ -24,37 +16,65 @@ pub enum CurrentlySelectedOption {
     Exit,
 }
 
+#[derive(Component)]
+pub struct MainMenuPlugin;
 
-fn update_menu(
-    mut commands: Commands,
-    state: ResMut<State<InterfaceState>>,
-    mut next_state: ResMut<NextState<InterfaceState>>,
-) {
-    if state.eq(&InterfaceState::MainMenu) {
-        debug!("returned early from main menu set up because the state was already main menu");
-        return;
+#[derive(Component)]
+pub struct MainMenuUi;
+
+impl Plugin for MainMenuPlugin {
+    fn build(&self, app: &mut App) {
+        app.insert_state(CurrentlySelectedOption::NewLobby)
+            .add_systems(Update, Self::display_toggle_on_state_update);
     }
-    
-    commands.spawn(Camera2d);
-    spawn_main_menu(commands);
-    next_state.set(InterfaceState::MainMenu);
 }
 
+impl MainMenuPlugin {
+    fn display_toggle_on_state_update(
+        mut commands: Commands,
+        interface_state: ResMut<State<InterfaceState>>,
+        menu_query: Query<Entity,With<MainMenuUi>>,
+    ) {
+        match menu_query.single() {
+            Ok(menu) => {
+                // if we get the query that's spawned and we are in the current
+                // lobby menu state then no work required
+                if interface_state.get() == &InterfaceState::InLobby {
+                    return;
+                }
 
-fn spawn_main_menu(
-   mut commands: Commands,
-){
-    commands
-        .spawn((Node {
-            width: percent(100),
-            height: percent(100),
-            align_items: AlignItems::Center,
-            justify_content: JustifyContent::Center,
-            flex_direction: FlexDirection::Column,
-            ..default()
-        },))
-        .with_children(|parent| {
-            parent.spawn((
+                // if we aren't in the lobby menu state despawn the menu
+                commands.entity(menu).despawn();
+            }
+            Err(error) => {
+                error!("{:?}",error);
+                // if we get an erro extracting the menu and we're not supposed
+                // to be in the lobby menu then no work required 
+                if interface_state.get() == &InterfaceState::InLobby{
+                    Self::spawn_main_menu(commands);
+                }
+                else if interface_state.get().ne(&InterfaceState::InLobby) {
+                    //TODO: DO nothing?
+                }
+            }
+        }
+    }
+
+    fn spawn_main_menu(mut commands: Commands) {
+        commands
+            .spawn((
+                Node {
+                    width: percent(100),
+                    height: percent(100),
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    flex_direction: FlexDirection::Column,
+                    ..default()
+                },
+                MainMenuUi,
+            ))
+            .with_children(|parent| {
+                parent.spawn((
                 Button,
                 Text::new("New Lobby"),
                 observe(
@@ -68,7 +88,7 @@ fn spawn_main_menu(
                 Node { ..default() },
             ));
 
-            parent.spawn((
+                parent.spawn((
                 Button,
                 Text::new("Join Lobby"),
                 observe(
@@ -82,7 +102,7 @@ fn spawn_main_menu(
                 Node { ..default() },
             ));
 
-            parent.spawn((
+                parent.spawn((
                 Button,
                 Text::new("Settings"),
                 observe(
@@ -96,13 +116,14 @@ fn spawn_main_menu(
                 Node { ..default() },
             ));
 
-            parent.spawn((
-                Button,
-                Text::new("Quit to Desktop"),
-                observe(|_activate: On<Activate>| {
-                    info!("Quit to Desktop button pushed");
-                }),
-                Node { ..default() },
-            ));
-        });
+                parent.spawn((
+                    Button,
+                    Text::new("Quit to Desktop"),
+                    observe(|_activate: On<Activate>| {
+                        info!("Quit to Desktop button pushed");
+                    }),
+                    Node { ..default() },
+                ));
+            });
+    }
 }
