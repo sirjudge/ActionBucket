@@ -45,10 +45,17 @@ impl Plugin for AppPlugin {
                 .into(),
                 ..default()
             }),
-        )
-        .insert_state(InterfaceState::MainMenu);
+        );
+        
+        //TODO: Log better later
+        info!("created new game window");
+        
+        // Set the base interface state to main menu
+        //TODO: Need to do validation here
+        app.insert_state(InterfaceState::MainMenu);
+        info!("set state to interface state");
 
-        // Add other plugins.
+        // Load Plugins for each menu
         app.add_plugins((
             infra::audio::plugin,
             LobbyPlugin,
@@ -56,6 +63,8 @@ impl Plugin for AppPlugin {
             MenuSwapPlugin,
         ));
 
+        //TODO: This is something Bevy tutorial recommended but feels heavier handed than I need I think? 
+        // I'm keeping them in for now but need to come back at second glance
         // Order new `AppSystems` variants by adding them here:
         app.configure_sets(
             Update,

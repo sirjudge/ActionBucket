@@ -11,10 +11,7 @@ pub struct MainMenuPlugin;
 impl Plugin for MainMenuPlugin {
     fn build(&self, app: &mut App) {
         app.insert_state(CurrentlySelectedOption::NewLobby)
-            .add_systems(
-                Startup,
-                spawn_main_menu.run_if(in_state(InterfaceState::MainMenu)),
-            );
+            .add_systems(Update,update_menu.run_if(in_state(InterfaceState::InLobby)));
     }
 }
 
@@ -27,16 +24,26 @@ pub enum CurrentlySelectedOption {
     Exit,
 }
 
-fn spawn_main_menu(
+
+fn update_menu(
     mut commands: Commands,
     state: ResMut<State<InterfaceState>>,
     mut next_state: ResMut<NextState<InterfaceState>>,
 ) {
     if state.eq(&InterfaceState::MainMenu) {
-        warn!("returned early from main menu set up because the state was already main menu")
+        debug!("returned early from main menu set up because the state was already main menu");
+        return;
     }
-
+    
     commands.spawn(Camera2d);
+    spawn_main_menu(commands);
+    next_state.set(InterfaceState::MainMenu);
+}
+
+
+fn spawn_main_menu(
+   mut commands: Commands,
+){
     commands
         .spawn((Node {
             width: percent(100),
@@ -98,5 +105,4 @@ fn spawn_main_menu(
                 Node { ..default() },
             ));
         });
-    next_state.set(InterfaceState::MainMenu);
 }

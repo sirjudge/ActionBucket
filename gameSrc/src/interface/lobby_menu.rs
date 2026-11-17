@@ -1,4 +1,4 @@
-use crate::{InterfaceState, interface::main_menu::MainMenuPlugin, lobby::game_lobby::Lobby};
+use crate::{InterfaceState, lobby::game_lobby::Lobby};
 use bevy::{
     prelude::*,
     ui_widgets::{Activate, Button, observe},
@@ -14,7 +14,10 @@ impl Plugin for LobbyPlugin {
         app.insert_state::<CurrentlySelectedFighter>(CurrentlySelectedFighter::Random)
             .insert_resource::<Lobby>(Lobby::default())
             .add_systems(Startup, spawn_lobby.run_if(in_state(InterfaceState::InLobby)))
-            .add_systems(Update, despawn_menu);
+            //Note: Should eventually come back and see if there's a better way to handle this. This
+            //is small and modular enough probably fine to just keep it running in the background
+            //for now
+            .add_systems(Update, update_menu);
     }
 }
 
@@ -36,6 +39,7 @@ fn spawn_lobby(
 ) {
     if state.eq(&InterfaceState::InLobby) {
         debug!("already in lobby menu, no spawning needed");
+        return;
     }
 
     commands
@@ -129,14 +133,25 @@ fn spawn_lobby(
     next_state.set(InterfaceState::InLobby);
 }
 
-fn despawn_menu(
+fn update_menu(
     mut commands: Commands,
     state: ResMut<State<InterfaceState>>,
+    mut next_state: ResMut<NextState<InterfaceState>>,
     menu_query: Query<Entity, With<LobbyPlugin>>,
 ) {
     // if the current interface is lobby + we can get the root menu entity despawn
-    if state.eq(&InterfaceState::InLobby) && let Ok(_) = menu_query.single() {
+    if state.ne(&InterfaceState::InLobby) && let Ok(_) = menu_query.single() {
         commands.despawn_all::<With<LobbyPlugin>>();
+        info!("Successfully despawned the lobby plugin");
+        return;
+    }
+
+    // else if we are currently in the lobby and we didn't get as successful menu ECS query
+    // we need to spawn the lobby menu
+    if state.eq(&InterfaceState::InLobby) && let Err(_) = menu_query.single() {
+        // need to spawn main menu
+        spawn_lobby(commands, state, next_state);
+        info!("Successfully ran the spawn_lobby(. . .) method");
+        return;
     }
 }
-

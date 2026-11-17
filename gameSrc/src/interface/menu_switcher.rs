@@ -61,13 +61,13 @@ fn swap_message_reader(
             InterfaceState::Startup => todo!(),
             InterfaceState::MainMenu => {
                 match menu_query.single(){
-                    Ok(menu) => {
+                    Ok(_) => {
+                        info!("successfully matched main menu query when switching menus");
                     },
-                    Err(_) => todo!(),
+                    Err(_) => {
+                        error!("Main menu query failed in menu swithcing");
+                    },
                 }
-                // if let Ok(menu) = menu_query.single() {
-                //     menu
-                // }
             },
             InterfaceState::Settings => todo!(),
             InterfaceState::JoinLobby => todo!(),
