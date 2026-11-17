@@ -1,4 +1,4 @@
-use crate::{InterfaceState, infra::log_source::LogSource::Interface, lobby::game_lobby::Lobby};
+use crate::{InterfaceState, lobby::game_lobby::Lobby};
 use bevy::{
     prelude::*,
     ui_widgets::{Activate, Button, observe},
@@ -32,27 +32,47 @@ impl Plugin for LobbyPlugin {
 }
 
 impl LobbyPlugin {
-    // fn despawn_lobby(mut commands: Commands, ) {
-    //     match lobby_query.single(){
-    //         Ok(lobby_ui) =>{
-    //
-    //         },
-    //         Err(error) =>{
-    //
-    //         }
-    //     }
-    // }
-    //
+    fn display_toggle_on_state_update(
+        mut commands: Commands,
+        interface_state: ResMut<State<InterfaceState>>,
+        next_state: ResMut<NextState<InterfaceState>>,
+        lobby_query: Query<Entity, With<LobbyUi>>,
+    ) {
+        match lobby_query.single() {
+            Ok(menu) => {
+                // lobby UI is already spawned and we're still in the
+                // same lobby state, no work required
+                if interface_state.get() == &InterfaceState::InLobby {
+                    return;
+                }
+
+                if interface_state.get().ne(&InterfaceState::InLobby) {
+                    commands.entity(menu).despawn();
+                    debug!("Successfully despawned lobby menu");
+                }
+            }
+            Err(error) => {
+                // if we get an erro extracting the menu and we're not supposed
+                // to be in the lobby menu then no work required
+                if interface_state.get().ne(&InterfaceState::InLobby) {
+                    return;
+                }
+
+                // if we couldn't find the interface and we're in the lobby
+                // we should log error and spawn
+                warn!(
+                    "interface state is in lobby but could not find lobby menu:{:?}",
+                    error
+                );
+                Self::spawn_lobby(commands, interface_state, next_state);
+            }
+        }
+    }
     fn spawn_lobby(
         mut commands: Commands,
         interface_state: ResMut<State<InterfaceState>>,
         mut next_state: ResMut<NextState<InterfaceState>>,
     ) {
-        if interface_state.eq(&InterfaceState::InLobby) {
-            debug!("already in lobby menu, no spawning needed");
-            return;
-        }
-
         commands
             .spawn((
                 Node {
@@ -145,38 +165,6 @@ impl LobbyPlugin {
                     });
             });
         next_state.set(InterfaceState::InLobby);
-    }
-
-    fn display_toggle_on_state_update(
-        mut commands: Commands,
-        interface_state: ResMut<State<InterfaceState>>,
-        next_state: ResMut<NextState<InterfaceState>>,
-        lobby_query: Query<Entity, With<LobbyUi>>,
-    ) {
-
-        match lobby_query.single() {
-            Ok(menu) => {
-                // if we get the query that's spawned and we are in the current
-                // lobby menu state then no work required
-                if interface_state.get() == &InterfaceState::InLobby {
-                    return;
-                }
-
-                // if we aren't in the lobby menu state despawn the menu
-                commands.entity(menu).despawn();
-            }
-            Err(error) => {
-                error!("{:?}",error);
-                // if we get an erro extracting the menu and we're not supposed
-                // to be in the lobby menu then no work required 
-                if interface_state.get() == &InterfaceState::InLobby{
-                    // need to spawn
-                    Self::spawn_lobby(commands, interface_state, next_state);
-                }
-                else if interface_state.get().ne(&InterfaceState::InLobby) {
-                    return;
-                }
-            }
-        }
+        info!("Successfully ran spawn in lobby ui to completion");
     }
 }

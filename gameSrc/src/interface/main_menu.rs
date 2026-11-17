@@ -1,8 +1,5 @@
-use std::default;
-
 use crate::{InterfaceState, interface::menu_switcher::MenuSwapMessage};
 use bevy::{
-    ecs::system::{command::despawn_all, entity_command::despawn},
     prelude::*,
     ui_widgets::{Activate, Button, observe},
 };
@@ -33,13 +30,13 @@ impl MainMenuPlugin {
     fn display_toggle_on_state_update(
         mut commands: Commands,
         interface_state: ResMut<State<InterfaceState>>,
-        menu_query: Query<Entity,With<MainMenuUi>>,
+        menu_query: Query<Entity, With<MainMenuUi>>,
     ) {
         match menu_query.single() {
             Ok(menu) => {
                 // if we get the query that's spawned and we are in the current
                 // lobby menu state then no work required
-                if interface_state.get() == &InterfaceState::InLobby {
+                if interface_state.get() == &InterfaceState::MainMenu {
                     return;
                 }
 
@@ -47,15 +44,12 @@ impl MainMenuPlugin {
                 commands.entity(menu).despawn();
             }
             Err(error) => {
-                error!("{:?}",error);
-                // if we get an erro extracting the menu and we're not supposed
-                // to be in the lobby menu then no work required 
-                if interface_state.get() == &InterfaceState::InLobby{
-                    Self::spawn_main_menu(commands);
+                if interface_state.get().ne(&InterfaceState::MainMenu) {
+                    return;
                 }
-                else if interface_state.get().ne(&InterfaceState::InLobby) {
-                    //TODO: DO nothing?
-                }
+
+                error!("{:?}", error);
+                Self::spawn_main_menu(commands);
             }
         }
     }
