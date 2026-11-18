@@ -15,7 +15,7 @@ impl Plugin for LoggingPlugin {
             .insert_resource(LogSourceConfiguration::default())
             .add_systems(
                 Update,
-                log_event_reader.run_if(in_state(GameState::Running)),
+                log_event_reader.run_if(in_state(GameState::InMatch)),
             );
     }
 }

@@ -1,0 +1,31 @@
+[action_bucket1]
+character_id = 1
+base_damage = 10
+base_weight = 100
+base_speed_multiplier = 4
+lives_remaining = 0
+health_percent = 0
+
+[action_bucket2]
+character_id = 2
+base_damage = 20
+base_weight = 200
+lives_remaining = 0
+health_percent = 0
+base_speed_multiplier = 3
+
+[action_bucket3]
+character_id = 3
+base_damage = 30
+base_weight = 300
+lives_remaining = 0
+health_percent = 0
+base_speed_multiplier = 2
+
+[action_bucket4]
+character_id = 4
+base_damage = 40
+base_weight = 400
+lives_remaining = 0
+health_percent = 0
+base_speed_multiplier = 1

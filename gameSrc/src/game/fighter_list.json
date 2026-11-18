@@ -1,0 +1,36 @@
+{
+  "fighter_data": {
+    "action_bucket0": {
+      "character_id": 0,
+      "base_damage": 9,
+      "base_weight": 99,
+      "base_speed_multiplier": 3,
+      "lives_remaining": -1,
+      "health_percent": -1
+    },
+    "action_bucket1": {
+      "character_id": 1,
+      "base_damage": 19,
+      "base_weight": 199,
+      "lives_remaining": -1,
+      "health_percent": -1,
+      "base_speed_multiplier": 2
+    },
+    "action_bucket2": {
+      "character_id": 2,
+      "base_damage": 29,
+      "base_weight": 299,
+      "lives_remaining": -1,
+      "health_percent": -1,
+      "base_speed_multiplier": 1
+    },
+    "action_bucket3": {
+      "character_id": 3,
+      "base_damage": 39,
+      "base_weight": 399,
+      "lives_remaining": -1,
+      "health_percent": -1,
+      "base_speed_multiplier": 0
+    }
+  }
+}

@@ -6,6 +6,7 @@ pub mod in_game;
 pub mod lobby;
 pub mod pallette;
 pub mod splash;
+pub mod debug;
 
 
 #[derive(Message)]

@@ -6,3 +6,5 @@ edition = "2024"
 
 [dependencies]
 bevy = { version ="0.20.1" , features = ["debug"] }
+serde = {version = "1.0.229", features = ["derive"]}
+toml = "1.2.1"

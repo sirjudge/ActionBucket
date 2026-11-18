@@ -12,12 +12,13 @@ pub enum GameState {
     Initializing,
     MainMenu,
     Dialogue,
-    Running,
     Paused,
     Loading,
     Saving,
     GameOver,
     TearDown,
+    MatchStarting,
+    InMatch,
 }
 
 #[derive(States, Resource, Default, Debug, Clone, PartialEq, Eq, Hash)]
