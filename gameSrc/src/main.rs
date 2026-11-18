@@ -1,12 +1,10 @@
 use bevy::prelude::*;
 
-use crate::interface::{
-    lobby_menu::LobbyPlugin, main_menu::MainMenuPlugin, menu_switcher::MenuSwapPlugin,
-};
+use crate::scenes::{MenuSwapPlugin, lobby::LobbyPlugin, main_menu::MainMenuPlugin};
 
 pub mod game;
 pub mod infra;
-pub mod interface;
+pub mod scenes;
 pub mod lobby;
 pub mod tracking;
 
@@ -88,7 +86,7 @@ impl Plugin for AppPlugin {
 #[derive(SystemSet, Debug, Clone, Copy, Eq, PartialEq, Hash, PartialOrd, Ord)]
 enum AppSystems {
     //TODO: These came with the bevy tutorial so don't need for now
-    // they look interesting and tickTimers and recordInput sound 
+    // they look interesting and tickTimers and recordInput sound
     // like things I want to tinker with
     // TickTimers,
     // RecordInput,

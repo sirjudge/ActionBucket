@@ -1,6 +1,12 @@
 use bevy::prelude::*;
+use crate::{InterfaceState, scenes::main_menu::MainMenuPlugin};
 
-use crate::{InterfaceState, interface::main_menu::MainMenuPlugin};
+pub mod main_menu;
+pub mod in_game;
+pub mod lobby;
+pub mod pallette;
+pub mod splash;
+
 
 #[derive(Message)]
 pub struct MenuSwapMessage {

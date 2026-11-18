@@ -1,16 +1,29 @@
-pub struct Fighter {
-    health_percent: i16,
-    lives_remaining: i16,
+pub enum PlayerType {
+    Human,
+    CPU
 }
 
-impl Fighter {
-    fn new() -> Self {
+pub enum ControlledLocalPlayer {
+}
+
+pub struct Fighter {
+    pub health_percent: i16,
+    pub lives_remaining: i16,
+    pub player_type: PlayerType
+}
+
+impl Default for Fighter {
+    fn default() -> Self {
         Fighter {
             health_percent: 0,
             lives_remaining: 3,
+            player_type: PlayerType::CPU,
         }
     }
+}
 
+
+impl Fighter {
     fn set_heatlh(&mut self, health_percent: i16){
         if health_percent < 0 {
             self.health_percent = 0;
@@ -57,7 +70,6 @@ impl Fighter {
 
 #[cfg(test)]
 mod test {
-    use crate::game::fighter;
     use super::*;
 
     #[test]
@@ -80,6 +92,6 @@ mod test {
     }
 
     fn create_fighter() -> Fighter {
-        Fighter::new()
+        Fighter::default()
     }
 }

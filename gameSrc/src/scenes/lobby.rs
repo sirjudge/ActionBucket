@@ -36,7 +36,7 @@ impl Plugin for LobbyPlugin {
 
 impl LobbyPlugin {
     fn lobby_debug(selected_fighter_option: ResMut<State<CurrentFighterOption>>) {
-        info!("currently selected_fighter_option: {:?}", selected_fighter_option);
+        debug!("currently selected_fighter_option: {:?}", selected_fighter_option);
     }
 
     fn display_toggle_on_state_update(
@@ -151,8 +151,9 @@ impl LobbyPlugin {
                             Button,
                             Name::new("StartGameButton"),
                             Text::new("Start Game"),
-                            observe(|_activate: On<Activate>| {
+                            observe(|_activate: On<Activate>, mut next_state: ResMut<NextState<InterfaceState>> | {
                                 info!("Start game button pushed");
+                                next_state.set(InterfaceState::InGame);
                             }),
                         ));
 
@@ -161,8 +162,9 @@ impl LobbyPlugin {
                             Button,
                             Name::new("SettingsButton"),
                             Text::new("Change Match Settings"),
-                            observe(|_activate: On<Activate>| {
+                            observe(|_activate: On<Activate>, mut next_state: ResMut<NextState<InterfaceState>> | {
                                 info!("settings button pushed");
+                                next_state.set(InterfaceState::Settings);
                             }),
                         ));
 

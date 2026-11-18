@@ -1,4 +1,5 @@
-use crate::{InterfaceState, interface::menu_switcher::MenuSwapMessage};
+use crate::InterfaceState;
+use crate::scenes::MenuSwapMessage;
 use bevy::{
     prelude::*,
     ui_widgets::{Activate, Button, observe},
