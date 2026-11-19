@@ -25,7 +25,6 @@ pub fn load_fighter_data_to_string() -> Result<String, io::Error> {
     }
 }
 
-// NOTE: currently hard crashes if we can't load or retrieve fighter data
 pub fn get_fighter_data_from_toml(toml_string: &str) -> Result<FighterData, Box<dyn Error>> {
     match toml::from_str::<FighterData>(toml_string) {
         Ok(fighter_data) => {
@@ -80,7 +79,6 @@ base_speed_multiplier = 1
         let fighter_data = get_fighter_data_from_toml(toml_string);
         match fighter_data {
             Ok(data) => {
-                // TODO: More assert here
                 assert_eq!(data.action_bucket1.character_id, 1);
                 assert_eq!(data.action_bucket1.base_damage, 10);
                 assert_eq!(data.action_bucket1.base_weight, 100);
@@ -102,9 +100,7 @@ base_speed_multiplier = 1
                 assert_eq!(data.action_bucket4.base_speed_multiplier, 1);
             }
             Err(error) => {
-                error!("Error orcurred during fighter toml data parsing:{:?}", error);
-                let log_message = format!("Error orcurred during fighter toml data parsing{:?}", error);
-                assert!(false,"{}", log_message);
+                panic!("Error orcurred during fighter toml data parsing{:?}", error);
             }
         }
     }

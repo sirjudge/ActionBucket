@@ -1,5 +1,5 @@
-use crate::InterfaceState;
-use crate::scenes::MenuSwapMessage;
+use crate::{SceneState, game::state::GameState};
+use crate::scenes::SceneSwapMessage;
 use bevy::{
     prelude::*,
     ui_widgets::{Activate, Button, observe},
@@ -30,14 +30,16 @@ impl Plugin for MainMenuPlugin {
 impl MainMenuPlugin {
     fn display_toggle_on_state_update(
         mut commands: Commands,
-        interface_state: ResMut<State<InterfaceState>>,
+        interface_state: ResMut<State<SceneState>>,
         menu_query: Query<Entity, With<MainMenuUi>>,
+        mut game_state: ResMut<NextState<GameState>>
     ) {
         match menu_query.single() {
             Ok(menu) => {
                 // if we get the query that's spawned and we are in the current
                 // lobby menu state then no work required
-                if interface_state.get() == &InterfaceState::MainMenu {
+                if interface_state.get() == &SceneState::MainMenu {
+
                     return;
                 }
 
@@ -45,12 +47,13 @@ impl MainMenuPlugin {
                 commands.entity(menu).despawn();
             }
             Err(error) => {
-                if interface_state.get().ne(&InterfaceState::MainMenu) {
+                if interface_state.get().ne(&SceneState::MainMenu) {
                     return;
                 }
 
                 error!("{:?}", error);
                 Self::spawn_main_menu(commands);
+                game_state.set(GameState::Menu);
             }
         }
     }
@@ -74,9 +77,9 @@ impl MainMenuPlugin {
                 Text::new("New Lobby"),
                 observe(
                     |_activate: On<Activate>,
-                     mut message_writer: MessageWriter<MenuSwapMessage>| {
+                     mut message_writer: MessageWriter<SceneSwapMessage>| {
                         info!("New Lobby button pushed");
-                        let message = MenuSwapMessage::new(InterfaceState::CreateLobby);
+                        let message = SceneSwapMessage::new(SceneState::CreateLobby);
                         message_writer.write(message);
                     },
                 ),
@@ -88,9 +91,9 @@ impl MainMenuPlugin {
                 Text::new("Join Lobby"),
                 observe(
                     |_activate: On<Activate>,
-                     mut message_writer: MessageWriter<MenuSwapMessage>| {
+                     mut message_writer: MessageWriter<SceneSwapMessage>| {
                         info!("Join Lobby button pushed");
-                        let message = MenuSwapMessage::new(InterfaceState::JoinLobby);
+                        let message = SceneSwapMessage::new(SceneState::JoinLobby);
                         message_writer.write(message);
                     },
                 ),
@@ -102,9 +105,9 @@ impl MainMenuPlugin {
                 Text::new("Settings"),
                 observe(
                     |_activate: On<Activate>,
-                     mut message_writer: MessageWriter<MenuSwapMessage>| {
+                     mut message_writer: MessageWriter<SceneSwapMessage>| {
                         info!("Settinsg button pushed");
-                        let message = MenuSwapMessage::new(InterfaceState::Settings);
+                        let message = SceneSwapMessage::new(SceneState::Settings);
                         message_writer.write(message);
                     },
                 ),

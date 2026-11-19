@@ -1,31 +1,36 @@
 use bevy::prelude::{Resource, States};
 
-#[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
-pub enum InputType {
-    Keyboard,
-    Controller,
-}
-
 #[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum GameState {
     #[default]
     Initializing,
-    MainMenu,
-    Dialogue,
+    Initialized,
+    Menu,
     Paused,
     Loading,
-    Saving,
     GameOver,
-    TearDown,
     MatchStarting,
     InMatch,
 }
 
 #[derive(States, Resource, Default, Debug, Clone, PartialEq, Eq, Hash)]
-pub enum PlayerState {
+pub enum FighterState {
     #[default]
     Idle,
     Moving,
     Attacking,
+}
+
+#[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum SceneState {
+    #[default]
+    Startup,
+    MainMenu,
+    Settings,
+    JoinLobby,
+    CreateLobby,
+    InLobby,
+    InGame,
+    Loading,
 }
 

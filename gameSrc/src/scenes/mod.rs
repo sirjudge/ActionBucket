@@ -1,22 +1,25 @@
+use crate::{
+    SceneState, scenes::{
+        in_game::InGamePlugin, lobby::{LobbyPlugin, LobbyUi}, main_menu::MainMenuPlugin,
+    },
+};
 use bevy::prelude::*;
-use crate::{InterfaceState, scenes::main_menu::MainMenuPlugin};
 
-pub mod main_menu;
+pub mod debug;
 pub mod in_game;
 pub mod lobby;
+pub mod main_menu;
 pub mod pallette;
 pub mod splash;
-pub mod debug;
-
 
 #[derive(Message)]
-pub struct MenuSwapMessage {
-    next_state: InterfaceState,
+pub struct SceneSwapMessage {
+    next_state: SceneState,
 }
 
-impl MenuSwapMessage {
-    pub fn new(next_state: InterfaceState) -> Self {
-        MenuSwapMessage { next_state }
+impl SceneSwapMessage {
+    pub fn new(next_state: SceneState) -> Self {
+        SceneSwapMessage { next_state }
     }
 }
 
@@ -25,19 +28,21 @@ pub struct MenuSwapPlugin;
 
 impl Plugin for MenuSwapPlugin {
     fn build(&self, app: &mut App) {
-        app.add_message::<MenuSwapMessage>()
+        app.add_message::<SceneSwapMessage>()
             .add_systems(Update, swap_message_reader);
     }
 }
 
-//TODO: Need to think about having some kind of save state change here 
+//TODO: Need to think about having some kind of save state change here
 // something like prevState: InterfaceState
 // Keep blindly swapping as is for now
 fn swap_message_reader(
-    mut message_reader: MessageReader<MenuSwapMessage>,
-    state: ResMut<State<InterfaceState>>,
-    mut next_state: ResMut<NextState<InterfaceState>>,
+    mut message_reader: MessageReader<SceneSwapMessage>,
+    state: ResMut<State<SceneState>>,
+    mut next_state: ResMut<NextState<SceneState>>,
     menu_query: Query<&MainMenuPlugin>,
+    lobby_query: Query<&LobbyPlugin>,
+    in_game_query: Query<&InGamePlugin>,
     mut commands: Commands,
 ) {
     for message in message_reader.read() {
@@ -49,48 +54,36 @@ fn swap_message_reader(
         }
         next_state.set(message.next_state.clone());
 
+        // handle current state despawn
         match state.get() {
-            InterfaceState::Startup => todo!(),
-            InterfaceState::MainMenu => {
-                // if the current interface is lobby + we can get the root menu entity despawn
-                if state.eq(&InterfaceState::MainMenu)
-                    && let Ok(_) = menu_query.single()
-                {
+            SceneState::MainMenu if menu_query.single().is_ok() => {
                     commands.despawn_all::<With<MainMenuPlugin>>();
-                }
-            },
-            InterfaceState::Settings => todo!(),
-            InterfaceState::JoinLobby => todo!(),
-            InterfaceState::CreateLobby => todo!(),
-            InterfaceState::InLobby => todo!(),
-            InterfaceState::InGame => todo!(),
-            InterfaceState::Loading => todo!(),
+            }
+            SceneState::InLobby if lobby_query.single().is_ok() => {
+                    commands.despawn_all::<With<LobbyPlugin>>();
+            }
+            SceneState::InGame if in_game_query.single().is_ok() => {
+                commands.despawn_all::<With<InGamePlugin>>();
+            }
+            _ => ()
         }
 
+        // spawn new stuff
         match message.next_state {
-            InterfaceState::Startup => todo!(),
-            InterfaceState::MainMenu => {
-                match menu_query.single(){
-                    Ok(_) => {
-                        info!("successfully matched main menu query when switching menus");
-                    },
-                    Err(_) => {
-                        error!("Main menu query failed in menu swithcing");
-                    },
-                }
-            },
-            InterfaceState::Settings => todo!(),
-            InterfaceState::JoinLobby => todo!(),
-            InterfaceState::CreateLobby =>{
+            SceneState::CreateLobby => {
                 info!("Creating lobby. . .beep boop. . .");
                 //TODO: Do networking things here to make lobby joinable by friends or support
+                //for now just worry about spawning stuff locally
                 info!("Lobby created");
-                next_state.set(InterfaceState::InLobby);
-
-            },
-            InterfaceState::InLobby => todo!(),
-            InterfaceState::InGame => todo!(),
-            InterfaceState::Loading => todo!(),
+                next_state.set(SceneState::InLobby);
+            }
+            _ => {
+                debug!(
+                    "Unhandled state change for next state hook:{:?}",
+                    message.next_state
+                );
+                next_state.set(message.next_state.clone());
+            }
         }
     }
 }

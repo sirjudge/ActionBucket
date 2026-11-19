@@ -3,3 +3,4 @@ pub mod log_source;
 pub mod log_source_configuration;
 pub mod audio;
 pub mod constants;
+pub mod rngeesus;

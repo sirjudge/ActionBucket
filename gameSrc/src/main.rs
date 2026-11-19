@@ -1,28 +1,20 @@
 use bevy::prelude::*;
 
-use crate::scenes::{MenuSwapPlugin, lobby::LobbyPlugin, main_menu::MainMenuPlugin};
+use crate::{
+    game::state::{GameState, SceneState},
+    scenes::{
+        MenuSwapPlugin, in_game::InGamePlugin, lobby::LobbyPlugin, main_menu::MainMenuPlugin,
+    },
+};
 
 pub mod game;
 pub mod infra;
-pub mod scenes;
 pub mod lobby;
+pub mod scenes;
 pub mod tracking;
 
 fn main() -> AppExit {
     App::new().add_plugins(AppPlugin).run()
-}
-
-#[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
-pub enum InterfaceState {
-    #[default]
-    Startup,
-    MainMenu,
-    Settings,
-    JoinLobby,
-    CreateLobby,
-    InLobby,
-    InGame,
-    Loading,
 }
 
 pub struct AppPlugin;
@@ -41,43 +33,28 @@ impl Plugin for AppPlugin {
             }),
         );
 
-        //TODO: Log better later
-        info!("created new game window");
+        app.insert_state(SceneState::MainMenu)
+            .insert_state(GameState::Initializing);
 
-        // Set the base interface state to main menu
-        //TODO: Need to do validation here
-        app.insert_state(InterfaceState::MainMenu);
-        info!("set state to interface state");
-
-        //TODO: Might be better to initialize these to false so we can just pass the
-        //MainMenuPlugin without also having to initialize each one here.
         app.add_plugins((
             infra::audio::plugin,
             LobbyPlugin,
             MainMenuPlugin,
             MenuSwapPlugin,
+            InGamePlugin,
         ));
 
-        //TODO: This is something Bevy tutorial recommended but feels heavier handed than I need I think?
-        // I'm keeping them in for now but need to come back at second glance
-        // Order new `AppSystems` variants by adding them here:
-        app.configure_sets(
-            Update,
-            (
-                // AppSystems::TickTimers,
-                // AppSystems::RecordInput,
-                AppSystems::Update,
-            )
-                .chain(),
-        );
-
-        // Set up the `Pause` state.
-        app.init_state::<Pause>();
-        app.configure_sets(Update, PausableSystems.run_if(in_state(Pause(false))));
+        app.configure_sets(Update, (AppSystems::Update,).chain());
 
         // Spawn the main camera.
         app.add_systems(Startup, spawn_camera.spawn());
+
+        app.add_systems(PostStartup, initialization_complete);
     }
+}
+
+fn initialization_complete(mut next_game_state: ResMut<NextState<GameState>>) {
+    next_game_state.set(GameState::Initialized);
 }
 
 /// High-level groupings of systems for the app in the `Update` schedule.
@@ -93,14 +70,6 @@ enum AppSystems {
     /// Do everything else (consider splitting this into further variants).
     Update,
 }
-
-/// Whether or not the game is paused.
-#[derive(States, Copy, Clone, Eq, PartialEq, Hash, Debug, Default)]
-struct Pause(pub bool);
-
-/// A system set for systems that shouldn't run while the game is paused.
-#[derive(SystemSet, Copy, Clone, Eq, PartialEq, Hash, Debug)]
-struct PausableSystems;
 
 fn spawn_camera() -> impl Scene {
     bsn! {

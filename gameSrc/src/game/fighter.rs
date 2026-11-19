@@ -1,13 +1,13 @@
 use bevy::ecs::component::Component;
 use serde::Deserialize;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 pub enum PlayerType {
     Human,
     CPU,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Copy)]
 pub struct FighterStats {
     pub character_id: i16,
     pub base_damage: i8,
@@ -18,7 +18,7 @@ pub struct FighterStats {
     pub lives_remaining: i16,
 }
 
-#[derive(Component, Clone, Debug)]
+#[derive(Component, Clone, Debug, Copy)]
 pub struct Fighter {
     pub player_type: PlayerType,
     pub fighter_stats: FighterStats,

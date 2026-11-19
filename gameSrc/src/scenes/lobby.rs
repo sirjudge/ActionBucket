@@ -1,4 +1,4 @@
-use crate::{InterfaceState, lobby::game_lobby::Lobby};
+use crate::{SceneState, lobby::game_lobby::Lobby, scenes::SceneSwapMessage};
 use bevy::{
     prelude::*,
     ui_widgets::{Activate, Button, observe},
@@ -18,7 +18,7 @@ pub enum CurrentFighterOption {
 pub struct LobbyPlugin;
 
 #[derive(Component)]
-struct LobbyUi;
+pub struct LobbyUi;
 
 // https://bevy.org/examples/ui-user-interface/standard-widgets/
 // using this as base
@@ -36,24 +36,28 @@ impl Plugin for LobbyPlugin {
 
 impl LobbyPlugin {
     fn lobby_debug(selected_fighter_option: ResMut<State<CurrentFighterOption>>) {
-        debug!("currently selected_fighter_option: {:?}", selected_fighter_option);
+        debug!(
+            "currently selected_fighter_option: {:?}",
+            selected_fighter_option
+        );
     }
 
     fn display_toggle_on_state_update(
         mut commands: Commands,
-        interface_state: ResMut<State<InterfaceState>>,
-        next_state: ResMut<NextState<InterfaceState>>,
+        interface_state: ResMut<State<SceneState>>,
+        next_state: ResMut<NextState<SceneState>>,
         lobby_query: Query<Entity, With<LobbyUi>>,
+        menu_swap_message_writer: MessageWriter<SceneSwapMessage>,
     ) {
         match lobby_query.single() {
             Ok(lobby_ui) => {
                 // lobby UI is already spawned and we're still in the
                 // same lobby state, no work required
-                if interface_state.get() == &InterfaceState::InLobby {
+                if interface_state.get() == &SceneState::InLobby {
                     return;
                 }
 
-                if interface_state.get().ne(&InterfaceState::InLobby) {
+                if interface_state.get().ne(&SceneState::InLobby) {
                     commands.entity(lobby_ui).despawn();
                     debug!("Successfully despawned lobby menu");
                 }
@@ -61,7 +65,7 @@ impl LobbyPlugin {
             Err(error) => {
                 // if we get an erro extracting the menu and we're not supposed
                 // to be in the lobby menu then no work required
-                if interface_state.get().ne(&InterfaceState::InLobby) {
+                if interface_state.get().ne(&SceneState::InLobby) {
                     return;
                 }
 
@@ -72,15 +76,15 @@ impl LobbyPlugin {
                     error
                 );
                 // Self::spawn_lobby(commands, next_state, next_fighter_option_state);
-                Self::spawn_lobby(commands, next_state);
+                Self::spawn_lobby(commands, next_state, menu_swap_message_writer);
             }
         }
     }
 
     fn spawn_lobby(
         mut commands: Commands,
-        mut next_state: ResMut<NextState<InterfaceState>>,
-        // mut next_fighter_option_state: ResMut<NextState<CurrentFighterOption>>,
+        mut next_state: ResMut<NextState<SceneState>>,
+        mut menu_swap_message_writer: MessageWriter<SceneSwapMessage>,
     ) {
         commands
             .spawn((
@@ -151,9 +155,9 @@ impl LobbyPlugin {
                             Button,
                             Name::new("StartGameButton"),
                             Text::new("Start Game"),
-                            observe(|_activate: On<Activate>, mut next_state: ResMut<NextState<InterfaceState>> | {
+                            observe(|_activate: On<Activate>, mut next_state: ResMut<NextState<SceneState>> | {
                                 info!("Start game button pushed");
-                                next_state.set(InterfaceState::InGame);
+                                next_state.set(SceneState::InGame);
                             }),
                         ));
 
@@ -162,9 +166,10 @@ impl LobbyPlugin {
                             Button,
                             Name::new("SettingsButton"),
                             Text::new("Change Match Settings"),
-                            observe(|_activate: On<Activate>, mut next_state: ResMut<NextState<InterfaceState>> | {
+                            observe(|_activate: On<Activate>, mut message_writer: MessageWriter<SceneSwapMessage> | {
                                 info!("settings button pushed");
-                                next_state.set(InterfaceState::Settings);
+                                message_writer
+                                    .write(SceneSwapMessage { next_state: SceneState::Settings});
                             }),
                         ));
 
@@ -173,14 +178,17 @@ impl LobbyPlugin {
                             Button,
                             Name::new("QuitToMenuButton"),
                             Text::new("Quit To Main Menu"),
-                            observe(|_activate: On<Activate>, mut next_state: ResMut<NextState<InterfaceState>> | {
+                            observe(|_activate: On<Activate>, mut message_writer: MessageWriter<SceneSwapMessage> | {
                                 info!("quit to menu button pushed");
-                                next_state.set(InterfaceState::MainMenu);
+                                message_writer.write(SceneSwapMessage {next_state:SceneState:: MainMenu});
                             }),
                         ));
                     });
             });
-        next_state.set(InterfaceState::InLobby);
+
+        menu_swap_message_writer.write(SceneSwapMessage {
+            next_state: SceneState::InLobby,
+        });
         info!("Successfully ran spawn in lobby ui to completion");
     }
 }
