@@ -1,5 +1,5 @@
 use crate::{
-    SceneState, scenes::{
+    SceneState, game::state::GameState, scenes::{
         in_game::InGamePlugin, lobby::{LobbyPlugin, LobbyUi}, main_menu::MainMenuPlugin,
     },
 };
@@ -39,7 +39,8 @@ impl Plugin for MenuSwapPlugin {
 fn swap_message_reader(
     mut message_reader: MessageReader<SceneSwapMessage>,
     state: ResMut<State<SceneState>>,
-    mut next_state: ResMut<NextState<SceneState>>,
+    mut next_scene_state: ResMut<NextState<SceneState>>,
+    mut next_game_state: ResMut<NextState<GameState>>,
     menu_query: Query<&MainMenuPlugin>,
     lobby_query: Query<&LobbyPlugin>,
     in_game_query: Query<&InGamePlugin>,
@@ -52,7 +53,7 @@ fn swap_message_reader(
         if &message.next_state == state.get() {
             return;
         }
-        next_state.set(message.next_state.clone());
+        next_scene_state.set(message.next_state.clone());
 
         // handle current state despawn
         match state.get() {
@@ -75,14 +76,21 @@ fn swap_message_reader(
                 //TODO: Do networking things here to make lobby joinable by friends or support
                 //for now just worry about spawning stuff locally
                 info!("Lobby created");
-                next_state.set(SceneState::InLobby);
+                next_scene_state.set(SceneState::InLobby);
+                next_game_state.set(GameState::Menu);
+            }
+            SceneState::MainMenu => {
+                next_game_state.set(GameState::Menu);
+            }
+            SceneState::InGame => {
+                next_game_state.set(GameState::MatchStarting);
             }
             _ => {
                 debug!(
                     "Unhandled state change for next state hook:{:?}",
                     message.next_state
                 );
-                next_state.set(message.next_state.clone());
+                next_scene_state.set(message.next_state.clone());
             }
         }
     }

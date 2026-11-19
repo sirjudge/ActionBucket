@@ -38,6 +38,7 @@ impl Plugin for InGamePlugin {
             ..Default::default()
         })
         .insert_state(MatchState::Uninitialized);
+
         app.add_systems(Update, Self::state_watcher);
         app.add_systems(
             Update,
@@ -65,12 +66,8 @@ impl InGamePlugin {
         window: Single<&Window>,
     ) {
         let bucket_sprite = match rngeesus::generate_rand_i8(1, 2) {
-            1 => {
-                Sprite::from_image(asset_server.load("sprites/bucket_1.png"))
-            }
-            2 => {
-                Sprite::from_image(asset_server.load("sprites/bucket_2.png"))
-            }
+            1 => Sprite::from_image(asset_server.load("sprites/bucket_1.png")),
+            2 => Sprite::from_image(asset_server.load("sprites/bucket_2.png")),
             _ => {
                 //TODO: Should change this to load some kind of "sprite not found" bucket
                 error!("could not load sprite so defaulting to sprite 1");
@@ -96,12 +93,14 @@ impl InGamePlugin {
             .insert(Transform::from_xyz(rand_x, rand_y, 1.0));
     }
 
+    //TODO: Think I can clean this method implementation up
     fn state_watcher(
         game_state: Res<State<GameState>>,
         mut next_game_state: ResMut<NextState<GameState>>,
         match_state: Res<State<MatchState>>,
         mut next_match_state: ResMut<NextState<MatchState>>,
         fight_resource: ResMut<FightResource>,
+        asset_server: Res<AssetServer>,
     ) {
         match game_state.get() {
             &GameState::MatchStarting => {
@@ -110,7 +109,8 @@ impl InGamePlugin {
                     MatchState::Uninitialized => {
                         //initialize
                         info!("starting match initialization");
-                        Self::initialize_match(fight_resource);
+                        Self::initialize_match(fight_resource, asset_server);
+
                         info!("completed match initialization, updating game states");
                         next_game_state.set(GameState::InMatch);
                         next_match_state.set(MatchState::InProgress);
@@ -119,18 +119,18 @@ impl InGamePlugin {
                         );
                     }
                     _ => {
-                        info!("No current handling for matchState:{:?}", match_state.get());
+                        // Do Nothing
                     }
                 }
             }
             _ => {
-                info!("No current handling for GameState:{:?}", game_state.get());
+                // Do Nothing
             }
         }
     }
 
-    fn initialize_match(mut fight_resource: ResMut<FightResource>) {
-        Self::initialize_fight_resource(fight_resource);
+    fn initialize_match(fight_resource: ResMut<FightResource>, asset_server: Res<AssetServer>) {
+        Self::initialize_fight_resource(fight_resource, asset_server);
     }
 
     /// Takes in parsed fighter data (which contain stats and base
@@ -174,9 +174,12 @@ impl InGamePlugin {
         info!("Bucket 4 initialized:{:?}", bucket_4);
     }
 
-    fn initialize_fight_resource(fight_resource: ResMut<FightResource>) {
+    fn initialize_fight_resource(
+        fight_resource: ResMut<FightResource>,
+        asset_server: Res<AssetServer>,
+    ) {
         if fight_resource.fighter_list.is_empty() {
-            match load_fighter_data_to_string() {
+            match load_fighter_data_to_string(asset_server) {
                 Ok(toml_string) => {
                     //TODO: Should eventually  load this smarter
                     // since we don't need every single fighter but hardcoding loading 4 buckets in

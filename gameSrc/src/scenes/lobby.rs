@@ -20,8 +20,6 @@ pub struct LobbyPlugin;
 #[derive(Component)]
 pub struct LobbyUi;
 
-// https://bevy.org/examples/ui-user-interface/standard-widgets/
-// using this as base
 impl Plugin for LobbyPlugin {
     fn build(&self, app: &mut App) {
         app.insert_state::<CurrentFighterOption>(CurrentFighterOption::Random)
@@ -45,7 +43,6 @@ impl LobbyPlugin {
     fn display_toggle_on_state_update(
         mut commands: Commands,
         interface_state: ResMut<State<SceneState>>,
-        next_state: ResMut<NextState<SceneState>>,
         lobby_query: Query<Entity, With<LobbyUi>>,
         menu_swap_message_writer: MessageWriter<SceneSwapMessage>,
     ) {
@@ -76,14 +73,13 @@ impl LobbyPlugin {
                     error
                 );
                 // Self::spawn_lobby(commands, next_state, next_fighter_option_state);
-                Self::spawn_lobby(commands, next_state, menu_swap_message_writer);
+                Self::spawn_lobby(commands, menu_swap_message_writer);
             }
         }
     }
 
     fn spawn_lobby(
         mut commands: Commands,
-        mut next_state: ResMut<NextState<SceneState>>,
         mut menu_swap_message_writer: MessageWriter<SceneSwapMessage>,
     ) {
         commands
@@ -155,9 +151,10 @@ impl LobbyPlugin {
                             Button,
                             Name::new("StartGameButton"),
                             Text::new("Start Game"),
-                            observe(|_activate: On<Activate>, mut next_state: ResMut<NextState<SceneState>> | {
+                            observe(|_activate: On<Activate>, mut message_writer: MessageWriter<SceneSwapMessage> | {
                                 info!("Start game button pushed");
-                                next_state.set(SceneState::InGame);
+                                message_writer
+                                    .write(SceneSwapMessage { next_state: SceneState::InGame});
                             }),
                         ));
 
