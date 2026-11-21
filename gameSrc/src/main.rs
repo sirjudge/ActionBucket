@@ -1,9 +1,8 @@
 use bevy::prelude::*;
 
 use crate::{
-    game::state::{GameState, SceneState},
-    scenes::{
-        MenuSwapPlugin, in_game::InGamePlugin, lobby::LobbyPlugin, main_menu::MainMenuPlugin,
+    game::state::{GameState, SceneState}, scenes::{
+        MenuSwapPlugin, debug::DebugPlugin, in_game::InGamePlugin, lobby::LobbyPlugin, main_menu::MainMenuPlugin,
     },
 };
 
@@ -42,6 +41,7 @@ impl Plugin for AppPlugin {
             MainMenuPlugin,
             MenuSwapPlugin,
             InGamePlugin,
+            DebugPlugin,
         ));
 
         app.configure_sets(Update, (AppSystems::Update,).chain());

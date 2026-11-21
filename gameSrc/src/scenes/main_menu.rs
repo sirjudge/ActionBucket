@@ -39,7 +39,6 @@ impl MainMenuPlugin {
                 // if we get the query that's spawned and we are in the current
                 // lobby menu state then no work required
                 if interface_state.get() == &SceneState::MainMenu {
-
                     return;
                 }
 

@@ -75,13 +75,7 @@ impl InGamePlugin {
             }
         };
 
-        let x_max = window.resolution.width() / 2.0;
-        let x_min = x_max;
-        let y_max = window.resolution.height() / 2.0;
-        let y_min = y_max;
-
-        let rand_x = rngeesus::generate_rand_f32(x_min, x_min);
-        let rand_y = rngeesus::generate_rand_f32(y_min, y_min);
+        let spawn_coords = Self::generate_spawn_coords(window);
         commands
             .spawn((
                 Node {
@@ -90,10 +84,29 @@ impl InGamePlugin {
                 bucket_sprite,
                 fighter,
             ))
-            .insert(Transform::from_xyz(rand_x, rand_y, 1.0));
+            //TODO: The spawn coords are being weird, need to investigate that
+            // .insert(Transform::from_xyz(rand_x, rand_y, 1.0));
+            .insert(Transform::from_xyz(spawn_coords.x, spawn_coords.y, spawn_coords.z));
     }
 
-    //TODO: Think I can clean this method implementation up
+    fn generate_spawn_coords(window: Single<&Window>) -> Vec3 {
+        let x_max = window.resolution.width() / 4.0;
+        let x_min = -x_max;
+        let y_max = window.resolution.height() / 4.0;
+        let y_min = -y_max;
+        
+        info!("x_max:{:?} x_min {:?}", x_max, x_min);
+        info!("y_max:{:?} y_max: {:?}", y_max, y_min);
+
+        // let rand_x = rngeesus::generate_rand_f32(x_min, x_min);
+        // let rand_y = rngeesus::generate_rand_f32(y_min, y_min);
+        let rand_x = rand::random_range(x_min.. x_max);
+        let rand_y = rand::random_range(y_min.. y_max);
+
+        info!("Spawning fighter at ({:?},{:?})", rand_x, rand_y);
+        vec3(rand_x, rand_y, 0.0)
+    }
+
     fn state_watcher(
         game_state: Res<State<GameState>>,
         mut next_game_state: ResMut<NextState<GameState>>,
