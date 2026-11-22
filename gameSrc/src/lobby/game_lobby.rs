@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+use crate::game::player::PlayerPort;
 
 #[derive(Default, Component, Clone, Debug, PartialEq)]
 pub enum GameType {
@@ -12,7 +13,7 @@ pub enum GameType {
 pub struct Lobby {
     total_players_allowed_in_lobby: i16,
     number_of_players_allowed_in_game: i16,
-    game_type: GameType
+    game_type: GameType,
 }
 
 impl Lobby {
