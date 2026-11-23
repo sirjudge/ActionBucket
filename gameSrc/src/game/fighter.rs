@@ -16,6 +16,9 @@ pub struct FighterStats {
     pub base_speed_multiplier: i8,
     pub health_percent: i16,
     pub lives_remaining: i16,
+    //TODO Columns to add
+    //pub display_name: String or &str
+    //pub sprinte_path: String or &str
 }
 
 #[derive(Component, Clone, Debug, Copy)]

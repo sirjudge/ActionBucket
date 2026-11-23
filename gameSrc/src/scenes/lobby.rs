@@ -1,4 +1,8 @@
-use crate::{SceneState, lobby::game_lobby::Lobby, scenes::SceneSwapMessage};
+use crate::{
+    SceneState,
+    lobby::{game_lobby::Lobby, player::Player},
+    scenes::SceneSwapMessage,
+};
 use bevy::{
     prelude::*,
     ui_widgets::{Activate, Button, observe},
@@ -25,19 +29,47 @@ impl Plugin for LobbyPlugin {
         app.insert_state::<CurrentFighterOption>(CurrentFighterOption::Random)
             .insert_resource::<Lobby>(Lobby::default());
 
+        app.add_systems(PostStartup, Self::init_lobby_post_startup);
+        app.add_systems(Update, Self::display_toggle_on_state_update);
         app.add_systems(
             Update,
-            (Self::display_toggle_on_state_update, Self::lobby_debug),
+            Self::player_event_reader.run_if(in_state(SceneState::InLobby)),
         );
     }
 }
 
+pub enum ConnectionMessageType {
+    Connect,
+    Disconnect,
+}
+
+#[derive(Message)]
+pub struct PlayerConnectionEvent {
+    player: Player,
+    connection_message_type: ConnectionMessageType,
+}
+
 impl LobbyPlugin {
-    fn lobby_debug(selected_fighter_option: ResMut<State<CurrentFighterOption>>) {
-        debug!(
-            "currently selected_fighter_option: {:?}",
-            selected_fighter_option
-        );
+    fn player_event_reader(
+        mut connection_message_reader: MessageReader<PlayerConnectionEvent>,
+        mut lobby: ResMut<Lobby>,
+    ) {
+        for message in connection_message_reader.read() {
+            match message.connection_message_type {
+                ConnectionMessageType::Connect => {
+                    info!("Processing player connection for player:{:?}", message.player);
+                    lobby.add_player_to_list(&message.player);
+                }
+                ConnectionMessageType::Disconnect => {
+                    info!("Processing player disconnection for player:{:?}", message.player);
+                    
+                }
+            }
+        }
+    }
+
+    fn init_lobby_post_startup(mut lobby_resource: ResMut<Lobby>) {
+        lobby_resource.initialize_player_list();
     }
 
     fn display_toggle_on_state_update(
@@ -72,7 +104,6 @@ impl LobbyPlugin {
                     "interface state is in lobby but could not find lobby menu:{:?}",
                     error
                 );
-                // Self::spawn_lobby(commands, next_state, next_fighter_option_state);
                 Self::spawn_lobby(commands, menu_swap_message_writer);
             }
         }

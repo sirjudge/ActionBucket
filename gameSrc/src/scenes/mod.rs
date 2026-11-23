@@ -1,7 +1,7 @@
 use crate::{
-    SceneState, game::state::GameState, scenes::{
-        in_game::InGamePlugin, lobby::{LobbyPlugin, LobbyUi}, main_menu::MainMenuPlugin,
-    },
+    SceneState,
+    game::state::GameState,
+    scenes::{in_game::InGamePlugin, lobby::LobbyPlugin, main_menu::MainMenuPlugin},
 };
 use bevy::prelude::*;
 
@@ -58,15 +58,15 @@ fn swap_message_reader(
         // handle current state despawn
         match state.get() {
             SceneState::MainMenu if menu_query.single().is_ok() => {
-                    commands.despawn_all::<With<MainMenuPlugin>>();
+                commands.despawn_all::<With<MainMenuPlugin>>();
             }
             SceneState::InLobby if lobby_query.single().is_ok() => {
-                    commands.despawn_all::<With<LobbyPlugin>>();
+                commands.despawn_all::<With<LobbyPlugin>>();
             }
             SceneState::InGame if in_game_query.single().is_ok() => {
                 commands.despawn_all::<With<InGamePlugin>>();
             }
-            _ => ()
+            _ => (),
         }
 
         // spawn new stuff

@@ -33,4 +33,3 @@ pub enum SceneState {
     InGame,
     Loading,
 }
-

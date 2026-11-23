@@ -1,9 +1,7 @@
 use crate::game::fighter::FighterStats;
 use std::error::Error;
-use std::fs;
 use std::io;
 use bevy::prelude::*;
-use bevy_common_assets::toml::TomlAssetPlugin;
 
 
 pub const FIGHTER_TOML_STRING: &str = r#"

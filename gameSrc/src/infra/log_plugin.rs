@@ -59,24 +59,24 @@ fn log_event_reader(
         return;
     }
 
-    for event in log_event_reader.read() {
+    for message in log_event_reader.read() {
         // if the log source is not enabled skip the event
-        if !log_source_config.is_enabled(&event.source) {
+        if !log_source_config.is_enabled(&message.source) {
             debug(
-                &format!("Log source is not enabled: {:?}", event.source),
-                event.source,
+                &format!("Log source is not enabled: {:?}", message.source),
+                message.source,
             );
             continue;
         }
-        match event.level {
+        match message.level {
             LogLevel::Debug => {
                 if log_source_config.debug_mode {
-                    debug(&event.message, event.source);
+                    debug(&message.message, message.source);
                 }
             }
-            LogLevel::Info => info(&event.message, event.source),
-            LogLevel::Warning => warn(&event.message, event.source),
-            LogLevel::Error => error(&event.message, event.source),
+            LogLevel::Info => info(&message.message, message.source),
+            LogLevel::Warning => warn(&message.message, message.source),
+            LogLevel::Error => error(&message.message, message.source),
         }
     }
 }
