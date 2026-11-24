@@ -9,4 +9,6 @@ bevy = { version ="0.20.1" , features = ["debug"] }
 bevy_common_assets = {version = "0.18.0", features = ["toml"] }
 rand = "0.10.4"
 serde = {version = "1.0.229", features = ["derive"]}
+strum = "0.28.0"
+strum_macros = "0.28.0"
 toml = "1.2.1"

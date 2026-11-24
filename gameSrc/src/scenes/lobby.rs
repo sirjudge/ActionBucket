@@ -62,7 +62,7 @@ impl LobbyPlugin {
                 }
                 ConnectionMessageType::Disconnect => {
                     info!("Processing player disconnection for player:{:?}", message.player);
-                    
+                    lobby.disconnect_player_by_player(&message.player);
                 }
             }
         }

@@ -1,6 +1,7 @@
-use crate::lobby::player::{Player, PlayerPort};
+use crate::lobby::player::{self, Player, PlayerPort};
 use bevy::{platform::collections::HashMap, prelude::*};
-use std::{fmt::Display, range};
+use std::{error::Error, fmt::Display};
+use strum::IntoEnumIterator;
 
 //TODO: Reconsider this at some point in the future but I think
 // a hard cap for now is a good idea to help prevent unexpected scaling problems
@@ -82,11 +83,9 @@ impl Lobby {
                     );
                     return;
                 }
-                self.player_list
-                    .entry(port)
-                    .and_modify(|player_value| {
-                        *player_value = Some(player.clone());
-                    });
+                self.player_list.entry(port).and_modify(|player_value| {
+                    *player_value = Some(player.clone());
+                });
             }
             None => {
                 error!("Could not add player to port because no player ports were marked as open");
@@ -94,15 +93,49 @@ impl Lobby {
         }
     }
 
-    pub(crate) fn disconnect_player_by_player(&mut self, player: Player){
+    pub(crate) fn disconnect_player_by_player(
+        &mut self,
+        player_to_disconnect: &Player,
+    ) -> Result<(), &str> {
         //TODO: Need to figure out how to remove a player by their player instead of their port
         // maybe assign unique UUID or something? idk
+        match player_to_disconnect.player_connection_id {
+            Some(id) => {
+                info!("player has connection id Id:{}", id);
+
+                let mut port_to_disconnect: Option<PlayerPort> = None;
+                for port in PlayerPort::iter() {
+                    self.player_list
+                        .entry(port.clone())
+                        .and_modify(|player_option| {
+                            if let Some(player) = player_option
+                                && player.eq(&player_to_disconnect)
+                            {
+                                port_to_disconnect = Some(port);
+                            }
+                        });
+                    if port_to_disconnect.is_some() {
+                        break;
+                    }
+                }
+                match port_to_disconnect {
+                    Some(found_port) => {
+                        self.disconnect_player_from_port(&found_port);
+                        Ok(())
+                    }
+                    None => Err("Could not find port to disconnect player from"),
+                }
+            }
+            None => Err("Could not disconnect player because player has no player id"),
+        }
     }
 
-    pub(crate) fn disconnect_player_from_port(&mut self, player_port: PlayerPort) {
-        self.player_list.entry(player_port).and_modify(|player| {
-            *player = None;
-        });
+    pub(crate) fn disconnect_player_from_port(&mut self, player_port: &PlayerPort) {
+        self.player_list
+            .entry(player_port.clone())
+            .and_modify(|player| {
+                *player = None;
+            });
     }
 
     //TODO: probably bad idea to make this public but might be fine for now?
