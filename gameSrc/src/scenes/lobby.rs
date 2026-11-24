@@ -1,3 +1,5 @@
+use std::default;
+
 use crate::{
     SceneState,
     lobby::{game_lobby::Lobby, player::Player},
@@ -27,7 +29,8 @@ pub struct LobbyUi;
 impl Plugin for LobbyPlugin {
     fn build(&self, app: &mut App) {
         app.insert_state::<CurrentFighterOption>(CurrentFighterOption::Random)
-            .insert_resource::<Lobby>(Lobby::default());
+            .insert_resource::<Lobby>(Lobby::default())
+            .add_message::<PlayerConnectionMessage>();
 
         app.add_systems(PostStartup, Self::init_lobby_post_startup);
         app.add_systems(Update, Self::display_toggle_on_state_update);
@@ -44,25 +47,38 @@ pub enum ConnectionMessageType {
 }
 
 #[derive(Message)]
-pub struct PlayerConnectionEvent {
+pub struct PlayerConnectionMessage {
     player: Player,
     connection_message_type: ConnectionMessageType,
 }
 
 impl LobbyPlugin {
     fn player_event_reader(
-        mut connection_message_reader: MessageReader<PlayerConnectionEvent>,
+        mut connection_message_reader: MessageReader<PlayerConnectionMessage>,
         mut lobby: ResMut<Lobby>,
     ) {
         for message in connection_message_reader.read() {
             match message.connection_message_type {
                 ConnectionMessageType::Connect => {
-                    info!("Processing player connection for player:{:?}", message.player);
+                    info!(
+                        "Processing player connection for player:{:?}",
+                        message.player
+                    );
                     lobby.add_player_to_list(&message.player);
                 }
                 ConnectionMessageType::Disconnect => {
-                    info!("Processing player disconnection for player:{:?}", message.player);
-                    lobby.disconnect_player_by_player(&message.player);
+                    info!(
+                        "Processing player disconnection for player:{:?}",
+                        message.player
+                    );
+                    match lobby.disconnect_player_by_player(&message.player) {
+                        Ok(_) => {
+                            info!("Successfully disconnected player from lobby");
+                        }
+                        Err(error) => {
+                            error!("failed disconnecting player from lobby:{:?}", error);
+                        }
+                    }
                 }
             }
         }

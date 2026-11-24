@@ -1,6 +1,6 @@
-use crate::lobby::player::{self, Player, PlayerPort};
+use crate::lobby::player::{Player, PlayerPort};
 use bevy::{platform::collections::HashMap, prelude::*};
-use std::{error::Error, fmt::Display};
+use std::fmt::Display;
 use strum::IntoEnumIterator;
 
 //TODO: Reconsider this at some point in the future but I think

@@ -2,8 +2,8 @@ use crate::game::fighter::Fighter;
 use bevy::asset::uuid::{self, Uuid};
 use bevy::log::error;
 use bevy::state::state::States;
-use strum_macros::EnumIter;
 use std::fmt::Display;
+use strum_macros::EnumIter;
 
 #[derive(Debug, Default, States, Eq, PartialEq, Hash, Clone, EnumIter)]
 #[repr(i8)]
@@ -69,7 +69,7 @@ pub enum InputType {
     Controller,
 }
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone, Debug, Eq, PartialEq)]
 pub enum PlayerConnectionType {
     #[default]
     Unconnected,
@@ -84,41 +84,17 @@ pub struct Player {
     pub player_connection_id: Option<Uuid>,
 }
 
+//TODO: Should come back and re-evaluate this later
 impl PartialEq for Player {
     fn eq(&self, other: &Self) -> bool {
-        self.player_connection_id == other.player_connection_id
+        (self.player_connection_id == other.player_connection_id)
+            && (self.player_connection_type == other.player_connection_type)
     }
 }
 
 // Eq is a marker trait. The empty body asserts that the custom
 // PartialEq logic is reflexive, symmetric, and transitive.
 impl Eq for Player {}
-
-
-// impl Eq for Player {
-//     fn eq(&self, other: &Self) -> bool {
-//         //TODO: panic? Error? False?
-//         if other.player_connection_id.is_none() || self.player_connection_id.is_none() {
-//             error!("This logic should not be hit and if it's hit I've done something wrong");
-//             return false;
-//         }
-//
-//
-//        // match self.player_connection_id {
-//        //      Some(id) => {
-//        //          id.eq(other.player_connection_id)
-//        //      }
-//        //      None => {
-//        //          // Todo: Need to compare 
-//        //          error!("should not ever hit this either, need id to compare");
-//        //          false
-//        //      }
-//        //  }
-//
-//         self.player_connection_id.eq(&other.player_connection_id)
-//     }
-// }
-
 
 impl Display for Player {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
