@@ -2,14 +2,15 @@ use crate::lobby::player::{Player, PlayerPort};
 use bevy::{platform::collections::HashMap, prelude::*};
 use std::fmt::Display;
 use strum::IntoEnumIterator;
+use uuid::{Uuid, uuid};
 
 //TODO: Reconsider this at some point in the future but I think
 // a hard cap for now is a good idea to help prevent unexpected scaling problems
 // when there doesn't need to be. The idea is for lobby's to not be that large so
 // a cap to help keep that design in mind is I think an okay compromise.
 // Only thing to think or add is a way to configure this value.
-const MAX_PLAYERS_IN_GAME: i8 = 12;
-const MAX_PLAYERS_IN_LOBBY: i8 = 12;
+const MAX_PLAYERS_IN_GAME: i8 = 8;
+const MAX_PLAYERS_IN_LOBBY: i8 = 16;
 
 #[derive(Default, Component, Clone, Debug, PartialEq)]
 pub enum MatchEndConditionType {
@@ -23,7 +24,7 @@ pub struct Lobby {
     pub total_players_allowed_in_lobby: i8,
     pub total_players_allowed_in_game: i8,
     pub game_type: MatchEndConditionType,
-    pub player_list: HashMap<PlayerPort, Option<Player>>,
+    pub port_player_map: HashMap<PlayerPort, Option<Player>>,
 }
 
 impl Display for Lobby {
@@ -34,11 +35,11 @@ impl Display for Lobby {
         );
         let player_list_details_string = format!(
             "Total ports initialized: {:?}",
-            self.player_list.keys().count()
+            self.port_player_map.keys().count()
         );
 
         let mut player_list_string: String = Default::default();
-        for player in self.player_list.iter() {
+        for player in self.port_player_map.iter() {
             player_list_string += &format!("{:?}, ", player);
         }
 
@@ -59,32 +60,36 @@ impl Lobby {
             total_players_allowed_in_lobby: MAX_PLAYERS_IN_LOBBY,
             total_players_allowed_in_game: MAX_PLAYERS_IN_GAME,
             game_type: MatchEndConditionType::Lives,
-            player_list: HashMap::new(),
+            port_player_map: HashMap::new(),
         }
     }
 
-    pub fn find_first_available_port(&self) -> Option<PlayerPort> {
-        for i in self.player_list.iter() {
-            if i.1.is_none() {
-                return Some(i.0.clone());
-            }
+    pub fn find_first_available_port(&mut self) -> Option<PlayerPort> {
+        if self.port_player_map.is_empty() {
+            warn!("Player list is currently uninitialized");
+            self.initialize_player_list();
         }
-        None
+
+        PlayerPort::iter().find(|port| {
+            self.port_player_map.contains_key(port) && self.port_player_map[port].is_none()
+        })
     }
 
-    pub(crate) fn add_player_to_list(&mut self, player: &Player) {
+    pub(crate) fn add_player_to_list(&mut self, mut player: &Player) {
         let port = Self::find_first_available_port(self);
         match port {
             Some(port) => {
-                if matches!(self.player_list.get(&port), Some(Some(_))) {
+                if matches!(self.port_player_map.get(&port), Some(Some(_))) {
                     error!(
                         "Could not connect to Port {:?} because it's already occupied",
                         port
                     );
                     return;
                 }
-                self.player_list.entry(port).and_modify(|player_value| {
-                    *player_value = Some(player.clone());
+                self.port_player_map.entry(port).and_modify(|player_value| {
+                    let mut updated_player = player.clone();
+                    updated_player.player_connection_id = Some(Uuid::new_v4());
+                    *player_value = Some(updated_player);
                 });
             }
             None => {
@@ -105,7 +110,7 @@ impl Lobby {
 
                 let mut port_to_disconnect: Option<PlayerPort> = None;
                 for port in PlayerPort::iter() {
-                    self.player_list
+                    self.port_player_map
                         .entry(port.clone())
                         .and_modify(|player_option| {
                             if let Some(player) = player_option
@@ -131,7 +136,7 @@ impl Lobby {
     }
 
     pub(crate) fn disconnect_player_from_port(&mut self, player_port: &PlayerPort) {
-        self.player_list
+        self.port_player_map
             .entry(player_port.clone())
             .and_modify(|player| {
                 *player = None;
@@ -140,22 +145,20 @@ impl Lobby {
 
     //TODO: probably bad idea to make this public but might be fine for now?
     pub(crate) fn initialize_player_list(&mut self) {
-        let max_players_usize = match usize::try_from(MAX_PLAYERS_IN_LOBBY) {
-            Ok(max_players) => max_players,
-            Err(error) => {
-                warn!(
-                    "error occurred parsing max players in lobby const:{:?}",
-                    error
-                );
-                16
-            }
-        };
-        if self.player_list.keys().count() > 0 {
+        let max_players_usize = usize::try_from(MAX_PLAYERS_IN_LOBBY).unwrap_or_else(|error| {
+            warn!(
+                "error occurred parsing max players in lobby const:{:?}",
+                error
+            );
+            16
+        });
+
+        if self.port_player_map.keys().count() > 0 {
             warn!("Player list already has keys and is already initialized. Exiting init early");
             return;
         }
 
-        if self.player_list.keys().count() > max_players_usize {
+        if self.port_player_map.keys().count() > max_players_usize {
             error!(
                 "Detected more players than MAX_PLAYERS_IN_LOBBY ceiling parameter. Existing init early"
             );
@@ -175,7 +178,7 @@ impl Lobby {
 
             match PlayerPort::i8_to_port(&i8_i) {
                 Ok(port) => {
-                    self.player_list.insert(port, None);
+                    self.port_player_map.insert(port, None);
                 }
                 Err(error) => {
                     panic!("Failed parsing player port:{:?}", error);
@@ -207,15 +210,72 @@ mod game_lobby_struct_test {
         assert!(lobby.total_players_allowed_in_game == MAX_PLAYERS_IN_GAME);
         assert!(lobby.total_players_allowed_in_lobby == MAX_PLAYERS_IN_LOBBY);
         assert!(lobby.game_type == MatchEndConditionType::Lives);
-        assert!(lobby.player_list.is_empty());
+        assert!(lobby.port_player_map.is_empty());
     }
 
     #[test]
-    fn lobby_initialization_method_successfully_inits_ports_with_no_players(){
+    fn lobby_initialization_method_successfully_inits_ports_with_no_players() {
         let mut lobby = Lobby::default();
-        assert!(lobby.player_list.is_empty());
+        assert!(lobby.port_player_map.is_empty());
         lobby.initialize_player_list();
-        assert!(!lobby.player_list.is_empty());
-        assert!(lobby.player_list.keys().count() > 0);
+        assert!(!lobby.port_player_map.is_empty());
+        assert!(lobby.port_player_map.keys().count() > 0);
     }
+
+    #[test]
+    fn find_first_available_port() {
+        let mut lobby = Lobby::default();
+        lobby.initialize_player_list();
+        match lobby.find_first_available_port() {
+            Some(port) => {
+                assert!(port == PlayerPort::One);
+            }
+            None => {
+                panic!("expected to find open port but returned none instead");
+            }
+        }
+    }
+
+    #[test]
+    fn lobby_format_method_runs_without_error() {
+        let lobby = Lobby::default();
+        let lobby_string = format!("{:?}", lobby);
+        assert!(
+            !lobby_string.is_empty(),
+            "expected lobby string to be a non empty string but it was"
+        );
+    }
+
+    #[test]
+    fn add_player_to_empty_list_sets_first_port() {
+        let mut lobby = Lobby::default();
+        lobby.initialize_player_list();
+        let player = Player::default();
+        lobby.add_player_to_list(&player);
+
+        match lobby.port_player_map.get(&PlayerPort::One) {
+            Some(player_option) => {
+                assert!(
+                    player_option.is_some(),
+                    "expected player to be in port one but was not"
+                );
+                if let Some(player) = player_option {
+                    assert!(
+                        player.player_connection_id.is_some(),
+                        "expected player connection id to be set but was none instead"
+                    );
+                }
+            }
+            None => {
+                panic!("expected to find port 1 in hash map keys but was not found");
+            }
+        }
+    }
+
+    //TODO: need to add the following unit tests
+    //adding player to full lobby
+    //adding player to uninitialized player list
+    //disconnecting player with ID not in player list
+    //disconnecting player with ID in player list
+    //disconnecting player by port
 }

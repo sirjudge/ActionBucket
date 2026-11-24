@@ -12,3 +12,4 @@ serde = {version = "1.0.229", features = ["derive"]}
 strum = "0.28.0"
 strum_macros = "0.28.0"
 toml = "1.2.1"
+uuid = { version = "1.29.2", features = ["v4"] }

@@ -75,11 +75,31 @@ pub enum PlayerConnectionType {
     Remote,
 }
 
-#[derive(Default, Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum PlayerType {
+    Human,
+    CPU,
+}
+
+#[derive(Clone, Debug)]
 pub struct Player {
     pub selected_fighter: Option<Fighter>,
     pub player_connection_type: PlayerConnectionType,
     pub player_connection_id: Option<Uuid>,
+    pub player_type: PlayerType,
+}
+
+impl Default for Player {
+    fn default() -> Self {
+        Self {
+            selected_fighter: Default::default(),
+            player_connection_type: Default::default(),
+            player_connection_id: Default::default(),
+            //TODO: Not sure what the best way to handle this 
+            //default is. Keep human for now and expand to cpu later maybe?
+            player_type: PlayerType::Human
+        }
+    }
 }
 
 //TODO: Should come back and re-evaluate this later
