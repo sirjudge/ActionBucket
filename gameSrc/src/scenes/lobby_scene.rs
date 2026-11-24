@@ -1,6 +1,10 @@
 use crate::{
     SceneState,
-    lobby::{game_lobby::Lobby, player::Player},
+    game::fighter::Fighter,
+    lobby::{
+        game_lobby::Lobby,
+        player::{Player, PlayerPort},
+    },
     scenes::SceneSwapMessage,
 };
 use bevy::{
@@ -8,15 +12,17 @@ use bevy::{
     ui_widgets::{Activate, Button, observe},
 };
 
-#[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
-pub enum CurrentFighterOption {
-    #[default]
-    Random = 0,
-    BucketOne = 1,
-    BucketTwo = 2,
-    BucketThree = 3,
-    BucketFour = 4,
-}
+//TODO: this was from old implemetnation before I updated how I was doing
+//lobby and player stuff
+// #[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
+// pub enum CurrentFighterOption {
+//     #[default]
+//     Random = 0,
+//     BucketOne = 1,
+//     BucketTwo = 2,
+//     BucketThree = 3,
+//     BucketFour = 4,
+// }
 
 #[derive(Component)]
 pub struct LobbyPlugin;
@@ -26,15 +32,18 @@ pub struct LobbyUi;
 
 impl Plugin for LobbyPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_state::<CurrentFighterOption>(CurrentFighterOption::Random)
-            .insert_resource::<Lobby>(Lobby::default())
+        app.insert_resource::<Lobby>(Lobby::default())
             .add_message::<PlayerConnectionMessage>();
 
         app.add_systems(PostStartup, Self::init_lobby_post_startup);
         app.add_systems(Update, Self::display_toggle_on_state_update);
         app.add_systems(
             Update,
-            Self::player_event_reader.run_if(in_state(SceneState::InLobby)),
+            (
+                Self::player_event_reader,
+                Self::player_character_change_reader,
+            )
+                .run_if(in_state(SceneState::InLobby)),
         );
     }
 }
@@ -45,12 +54,39 @@ pub enum ConnectionMessageType {
 }
 
 #[derive(Message)]
+pub struct PlayerCharacterChangeMessage {
+    player_port: PlayerPort,
+    fighter: Fighter,
+}
+#[derive(Message)]
 pub struct PlayerConnectionMessage {
     player: Player,
     connection_message_type: ConnectionMessageType,
 }
 
 impl LobbyPlugin {
+    fn player_character_change_reader(
+        mut lobby: ResMut<Lobby>,
+        mut player_change_message_reader: MessageReader<PlayerCharacterChangeMessage>,
+    ) {
+        for message in player_change_message_reader.read() {
+            lobby
+                .port_player_map
+                .entry(message.player_port.clone())
+                .and_modify(|player_option| match player_option {
+                    Some(player) => {
+                        player.selected_fighter = Some(message.fighter);
+                    }
+                    None => {
+                        error!(
+                            "Could not map Player from player port:{:?}",
+                            message.player_port.clone()
+                        );
+                    }
+                });
+        }
+    }
+
     fn player_event_reader(
         mut connection_message_reader: MessageReader<PlayerConnectionMessage>,
         mut lobby: ResMut<Lobby>,
@@ -145,9 +181,8 @@ impl LobbyPlugin {
                     Button,
                     Name::new("ActionBucket1"),
                     Text::new("Action Bucket 1"),
-                    observe(|_activate: On<Activate>,mut next_fighter_option_state: ResMut<'_, NextState<CurrentFighterOption>> | {
+                    observe(|_activate: On<Activate> | {
                         info!("action bucket 1 selected");
-                        next_fighter_option_state.set(CurrentFighterOption::BucketOne);
                     }),
                 ));
                 parent.spawn((
@@ -155,9 +190,8 @@ impl LobbyPlugin {
                     Button,
                     Name::new("ActionBucket2"),
                     Text::new("Action Bucket 2"),
-                    observe(|_activate: On<Activate>,mut next_fighter_option_state: ResMut<'_, NextState<CurrentFighterOption>> | {
+                    observe(|_activate: On<Activate> | {
                         info!("action bucket 2 selected");
-                        next_fighter_option_state.set(CurrentFighterOption::BucketTwo);
                     }),
                 ));
                 parent.spawn((
@@ -165,9 +199,8 @@ impl LobbyPlugin {
                     Button,
                     Name::new("ActionBucket3"),
                     Text::new("Action Bucket 3"),
-                    observe(|_activate: On<Activate>,mut next_fighter_option_state: ResMut<'_, NextState<CurrentFighterOption>> | {
+                    observe(|_activate: On<Activate> | {
                         info!("action bucket 3 selected");
-                        next_fighter_option_state.set(CurrentFighterOption::BucketThree);
                     }),
                 ));
                 parent.spawn((
@@ -175,9 +208,8 @@ impl LobbyPlugin {
                     Button,
                     Name::new("ActionBucket4"),
                     Text::new("Action Bucket 4"),
-                    observe(|_activate: On<Activate>,mut next_fighter_option_state: ResMut<'_, NextState<CurrentFighterOption>> | {
+                    observe(|_activate: On<Activate> | {
                         info!("action bucket 4 selected");
-                        next_fighter_option_state.set(CurrentFighterOption::BucketFour);
                     }),
                 ));
 

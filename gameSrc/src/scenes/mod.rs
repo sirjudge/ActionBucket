@@ -1,13 +1,13 @@
 use crate::{
     SceneState,
     game::state::GameState,
-    scenes::{in_game::InGamePlugin, lobby::LobbyPlugin, main_menu::MainMenuPlugin},
+    scenes::{in_game::InGamePlugin, lobby_scene::LobbyPlugin, main_menu::MainMenuPlugin},
 };
 use bevy::prelude::*;
 
 pub mod debug;
 pub mod in_game;
-pub mod lobby;
+pub mod lobby_scene;
 pub mod main_menu;
 pub mod pallette;
 pub mod splash;

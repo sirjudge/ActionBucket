@@ -73,6 +73,7 @@ pub enum PlayerConnectionType {
     Unconnected,
     Local,
     Remote,
+    Host,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -95,9 +96,9 @@ impl Default for Player {
             selected_fighter: Default::default(),
             player_connection_type: Default::default(),
             player_connection_id: Default::default(),
-            //TODO: Not sure what the best way to handle this 
+            //TODO: Not sure what the best way to handle this
             //default is. Keep human for now and expand to cpu later maybe?
-            player_type: PlayerType::Human
+            player_type: PlayerType::Human,
         }
     }
 }
@@ -120,6 +121,7 @@ impl Display for Player {
             PlayerConnectionType::Unconnected => "Unconnected Player".to_string(),
             PlayerConnectionType::Local => "Connected locally".to_string(),
             PlayerConnectionType::Remote => "Connected Remote".to_string(),
+            PlayerConnectionType::Host => "Hosting Lobby".to_string(),
         };
 
         let fighter_string = match self.selected_fighter {

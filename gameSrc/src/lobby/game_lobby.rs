@@ -2,7 +2,7 @@ use crate::lobby::player::{Player, PlayerPort};
 use bevy::{platform::collections::HashMap, prelude::*};
 use std::fmt::Display;
 use strum::IntoEnumIterator;
-use uuid::{Uuid, uuid};
+use uuid::Uuid;
 
 //TODO: Reconsider this at some point in the future but I think
 // a hard cap for now is a good idea to help prevent unexpected scaling problems
@@ -75,7 +75,7 @@ impl Lobby {
         })
     }
 
-    pub(crate) fn add_player_to_list(&mut self, mut player: &Player) {
+    pub(crate) fn add_player_to_list(&mut self, player: &Player) {
         let port = Self::find_first_available_port(self);
         match port {
             Some(port) => {
@@ -187,18 +187,6 @@ impl Lobby {
         }
     }
 }
-
-/*
- *
-    pub fn find_first_available_port(&self) -> Option<PlayerPort> {
-        for i in self.player_list.iter() {
-            if i.1.is_none() {
-                return Some(i.0.clone());
-            }
-        }
-        None
-    }
-*/
 
 #[cfg(test)]
 mod game_lobby_struct_test {

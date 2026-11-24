@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     game::state::{GameState, SceneState}, scenes::{
-        MenuSwapPlugin, debug::DebugPlugin, in_game::InGamePlugin, lobby::LobbyPlugin, main_menu::MainMenuPlugin,
+        MenuSwapPlugin, debug::DebugPlugin, in_game::InGamePlugin, lobby_scene::LobbyPlugin, main_menu::MainMenuPlugin,
     },
 };
 

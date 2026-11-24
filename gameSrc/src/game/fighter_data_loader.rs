@@ -47,7 +47,7 @@ pub struct FighterData {
     pub action_bucket4: FighterStats,
 }
 
-pub fn load_fighter_data_to_string(asset_server: Res<AssetServer>) -> Result<String, io::Error> {
+pub fn load_fighter_data_to_string(_asset_server: Res<AssetServer>) -> Result<String, io::Error> {
     //TODO: Bevy not letting me do this as easily as I thought. For some reason
     // there's no "bevy_thing.extract_text_from_file()
     // let toml_text: Handle<bevy = asset_server.load("data/fighter_list.toml");
