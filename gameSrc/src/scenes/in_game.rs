@@ -84,9 +84,11 @@ impl InGamePlugin {
                 bucket_sprite,
                 fighter,
             ))
-            //TODO: The spawn coords are being weird, need to investigate that
-            // .insert(Transform::from_xyz(rand_x, rand_y, 1.0));
-            .insert(Transform::from_xyz(spawn_coords.x, spawn_coords.y, spawn_coords.z));
+            .insert(Transform::from_xyz(
+                spawn_coords.x,
+                spawn_coords.y,
+                spawn_coords.z,
+            ));
     }
 
     fn generate_spawn_coords(window: Single<&Window>) -> Vec3 {
@@ -94,16 +96,14 @@ impl InGamePlugin {
         let x_min = -x_max;
         let y_max = window.resolution.height() / 4.0;
         let y_min = -y_max;
-        
-        info!("x_max:{:?} x_min {:?}", x_max, x_min);
-        info!("y_max:{:?} y_max: {:?}", y_max, y_min);
 
-        // let rand_x = rngeesus::generate_rand_f32(x_min, x_min);
-        // let rand_y = rngeesus::generate_rand_f32(y_min, y_min);
-        let rand_x = rand::random_range(x_min.. x_max);
-        let rand_y = rand::random_range(y_min.. y_max);
 
-        info!("Spawning fighter at ({:?},{:?})", rand_x, rand_y);
+        let rand_x = rand::random_range(x_min..x_max);
+        let rand_y = rand::random_range(y_min..y_max);
+
+        debug!("x_max:{:?} x_min {:?}", x_max, x_min);
+        debug!("y_max:{:?} y_max: {:?}", y_max, y_min);
+        debug!("Spawning fighter at ({:?},{:?})", rand_x, rand_y);
         vec3(rand_x, rand_y, 0.0)
     }
 
@@ -152,7 +152,6 @@ impl InGamePlugin {
         let bucket_1_id = data.action_bucket1.character_id;
         let bucket_1 = Fighter {
             fighter_stats: data.action_bucket1,
-            player_type: Human,
         };
         fight_resource.spawn_queue.push_back(bucket_1);
         fight_resource.fighter_list.insert(bucket_1_id, bucket_1);
@@ -160,7 +159,6 @@ impl InGamePlugin {
         let bucket_2_id = data.action_bucket2.character_id;
         let bucket_2 = Fighter {
             fighter_stats: data.action_bucket2,
-            player_type: Human,
         };
         fight_resource.spawn_queue.push_back(bucket_1);
         fight_resource.fighter_list.insert(bucket_2_id, bucket_2);
@@ -168,7 +166,6 @@ impl InGamePlugin {
         let bucket_3_id = data.action_bucket3.character_id;
         let bucket_3 = Fighter {
             fighter_stats: data.action_bucket3,
-            player_type: Human,
         };
         fight_resource.spawn_queue.push_back(bucket_1);
         fight_resource.fighter_list.insert(bucket_3_id, bucket_3);
@@ -176,7 +173,6 @@ impl InGamePlugin {
         let bucket_4_id = data.action_bucket4.character_id;
         let bucket_4 = Fighter {
             fighter_stats: data.action_bucket4,
-            player_type: Human,
         };
         fight_resource.spawn_queue.push_back(bucket_1);
         fight_resource.fighter_list.insert(bucket_4_id, bucket_4);

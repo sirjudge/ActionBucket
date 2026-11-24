@@ -1,14 +1,13 @@
-use bevy::prelude::*;
+use crate::{GameState, SceneState};
 use bevy::{
     app::Plugin,
     diagnostic::LogDiagnosticsPlugin,
     ecs::system::Commands,
     prelude::Component,
+    prelude::*,
     state::{app::AppExtStates, state::States},
     ui::Node,
 };
-
-use crate::game::state::{GameState, SceneState};
 
 #[derive(States, Default, Debug, Clone, Copy, Hash, Eq, PartialEq)]
 pub enum DebugModeState {
@@ -40,33 +39,24 @@ impl Plugin for DebugPlugin {
 
 impl DebugPlugin {
     fn spawn_ui(mut commands: Commands) {
-        commands
-            .spawn((
-                Node {
-                    // align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    flex_direction: FlexDirection::Column,
-                    bottom: percent(10),
-                    left: percent(10),
-                    position_type: PositionType::Absolute,
+        commands.spawn((
+            Node {
+                justify_content: JustifyContent::Start,
+                flex_direction: FlexDirection::Column,
+                bottom: percent(10),
+                left: percent(10),
+                position_type: PositionType::Absolute,
 
-                    ..default()
-                },
-                DebugUi,
-                children![
-                    (Text::new("Game State")),
-                    (GameStateTextValue, Text::new("--")),
-                    (Text::new("Scene State:")),
-                    (SceneStateTextValue, Text::new("--")),
-                ],
-            ));
-            // .with_children(|parent| {
-            //     parent.spawn((
-            //     ));
-            //
-            //     parent.spawn((
-            //     ));
-            // });
+                ..default()
+            },
+            DebugUi,
+            children![
+                (Text::new("Game State")),
+                (GameStateTextValue, Text::new("--")),
+                (Text::new("Scene State:")),
+                (SceneStateTextValue, Text::new("--")),
+            ],
+        ));
     }
 
     fn despawn_ui(mut commands: Commands) {
@@ -102,42 +92,15 @@ impl DebugPlugin {
             (With<SceneStateTextValue>, Without<GameStateTextValue>),
         >,
     ) {
-
-        if !game_state_text_query.is_empty(){
+        if !game_state_text_query.is_empty() {
             let game_state_string = format!("{:?}", game_state.get());
             game_state_text_query.0 = game_state_string;
         }
-        
-        if !scene_state_text_query.is_empty(){
+
+        if !scene_state_text_query.is_empty() {
             let scene_state_string = format!("{:?}", scene_state.get());
             scene_state_text_query.0 = scene_state_string;
         }
-        
-        // match game_state_text_query  {
-        //     // Ok(mut game_state_text_component) => {
-        //     Ok(_) => {
-        //         // let game_state_string = format!("{:?}", game_state.get());
-        //         // game_state_text_component.0 = game_state_string;
-        //     }
-        //     Err(error) => {
-        //         warn!(
-        //             "debug menu enabled but could not find game state text component:{:?}",
-        //             error
-        //         );
-        //     }
-        // }
-        // match scene_state_text_query.single_mut() {
-        //     Ok(mut scene_state_text_component) => {
-        //         let scene_state_string = format!("{:?}", scene_state.get());
-        //         scene_state_text_component.0 = scene_state_string;
-        //     }
-        //     Err(error) => {
-        //         warn!(
-        //             "debug menu enabled but could not find game state text component:{:?}",
-        //             error
-        //         );
-        //     }
-        // }
     }
 }
 

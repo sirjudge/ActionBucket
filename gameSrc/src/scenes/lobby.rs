@@ -1,5 +1,3 @@
-use std::default;
-
 use crate::{
     SceneState,
     lobby::{game_lobby::Lobby, player::Player},

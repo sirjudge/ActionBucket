@@ -1,7 +1,5 @@
 use crate::game::fighter::Fighter;
-use bevy::asset::uuid::{self, Uuid};
-use bevy::log::error;
-use bevy::state::state::States;
+use bevy::{asset::uuid::Uuid, log::error, state::state::States};
 use std::fmt::Display;
 use strum_macros::EnumIter;
 

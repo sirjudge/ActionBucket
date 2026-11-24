@@ -23,7 +23,6 @@ pub struct FighterStats {
 
 #[derive(Component, Clone, Debug, Copy)]
 pub struct Fighter {
-    pub player_type: PlayerType,
     pub fighter_stats: FighterStats,
 }
 
@@ -32,7 +31,6 @@ pub struct Fighter {
 impl Default for Fighter {
     fn default() -> Self {
         Fighter {
-            player_type: PlayerType::Human,
             fighter_stats: FighterStats {
                 health_percent: 0,
                 lives_remaining: 3,
@@ -92,7 +90,7 @@ impl Fighter {
 
 
 #[cfg(test)]
-mod test {
+mod fighter_struct_tests {
     use super::*;
 
     #[test]
@@ -116,5 +114,21 @@ mod test {
 
     fn create_fighter() -> Fighter {
         Fighter::default()
+    }
+
+    #[test]
+    fn live_increment_go_up_by_one() {
+        let mut fighter = create_fighter();
+        let lives_remaining_current = fighter.fighter_stats.lives_remaining;
+        fighter.increment_lives();
+        assert!(fighter.fighter_stats.lives_remaining == (lives_remaining_current + 1));
+    }
+    
+    #[test]
+    fn live_decrement_go_down_by_one() {
+        let mut fighter = create_fighter();
+        let lives_remaining_current = fighter.fighter_stats.lives_remaining;
+        fighter.decrement_lives();
+        assert!(fighter.fighter_stats.lives_remaining == (lives_remaining_current - 1));
     }
 }

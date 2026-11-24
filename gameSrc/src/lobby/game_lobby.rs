@@ -184,3 +184,38 @@ impl Lobby {
         }
     }
 }
+
+/*
+ *
+    pub fn find_first_available_port(&self) -> Option<PlayerPort> {
+        for i in self.player_list.iter() {
+            if i.1.is_none() {
+                return Some(i.0.clone());
+            }
+        }
+        None
+    }
+*/
+
+#[cfg(test)]
+mod game_lobby_struct_test {
+    use super::*;
+
+    #[test]
+    fn lobby_default_init_successul() {
+        let lobby = Lobby::default();
+        assert!(lobby.total_players_allowed_in_game == MAX_PLAYERS_IN_GAME);
+        assert!(lobby.total_players_allowed_in_lobby == MAX_PLAYERS_IN_LOBBY);
+        assert!(lobby.game_type == MatchEndConditionType::Lives);
+        assert!(lobby.player_list.is_empty());
+    }
+
+    #[test]
+    fn lobby_initialization_method_successfully_inits_ports_with_no_players(){
+        let mut lobby = Lobby::default();
+        assert!(lobby.player_list.is_empty());
+        lobby.initialize_player_list();
+        assert!(!lobby.player_list.is_empty());
+        assert!(lobby.player_list.keys().count() > 0);
+    }
+}
