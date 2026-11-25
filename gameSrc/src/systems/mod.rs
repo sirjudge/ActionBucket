@@ -1,16 +1,16 @@
 use crate::{
     SceneState,
     game::state::GameState,
-    scenes::{in_game::InGamePlugin, lobby_scene::LobbyPlugin, main_menu::MainMenuPlugin},
+    systems::{in_game::InGamePlugin, in_lobby::LobbyPlugin, main_menu::MainMenuPlugin},
 };
 use bevy::prelude::*;
 
 pub mod debug;
 pub mod in_game;
-pub mod lobby_scene;
+pub mod in_lobby;
 pub mod main_menu;
-pub mod pallette;
-pub mod splash;
+pub mod palette;
+pub mod server;
 
 #[derive(Message)]
 pub struct SceneSwapMessage {
@@ -48,7 +48,7 @@ fn swap_message_reader(
 ) {
     for message in message_reader.read() {
         // if we have the same states don't swap
-        let log_message = format!("Recieved swap interface message: {:?}", message.next_state);
+        let log_message = format!("Received swap interface message: {:?}", message.next_state);
         info!(log_message);
         if &message.next_state == state.get() {
             return;

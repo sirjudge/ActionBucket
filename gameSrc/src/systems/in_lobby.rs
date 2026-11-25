@@ -1,11 +1,22 @@
 use crate::{
-    SceneState, game::fighter::Fighter, lobby::{
+    SceneState,
+    game::fighter::Fighter,
+    lobby::{
         game_lobby::Lobby,
         player::{Player, PlayerPort},
-    }, scenes::{SceneSwapMessage, pallette::{BORDER_COLOR, BUTTON_TEXT, BUTTON_BACKGROUND, BUTTON_HOVERED_BACKGROUND, BUTTON_PRESSED_BACKGROUND}},
+    },
+    systems::{
+        SceneSwapMessage,
+        palette::{
+            BORDER_COLOR, BUTTON_BACKGROUND, BUTTON_HOVERED_BACKGROUND, BUTTON_PRESSED_BACKGROUND,
+            BUTTON_TEXT,
+        },
+    },
 };
 use bevy::{
-    picking::hover::Hovered, prelude::*, ui::BoxSizing::BorderBox, ui_widgets::{Activate, Button, observe},
+    picking::hover::Hovered,
+    prelude::*,
+    ui_widgets::{Activate, Button, observe},
 };
 
 #[derive(Component)]
@@ -104,7 +115,7 @@ impl LobbyPlugin {
     }
 
     fn init_lobby_post_startup(mut lobby_resource: ResMut<Lobby>) {
-        lobby_resource.initialize_player_list();
+        // lobby_resource.initialize_player_list();
     }
 
     fn display_toggle_on_state_update(
@@ -127,7 +138,7 @@ impl LobbyPlugin {
                 }
             }
             Err(error) => {
-                // if we get an erro extracting the menu and we're not supposed
+                // if we get an error extracting the menu and we're not supposed
                 // to be in the lobby menu then no work required
                 if interface_state.get().ne(&SceneState::InLobby) {
                     return;
@@ -164,8 +175,7 @@ impl LobbyPlugin {
             ))
             .with_children(|parent| {
                 parent.spawn((
-                    Node { ..default() },
-                    Button,
+                    Self::spawn_button_node(),
                     Name::new("ActionBucket1"),
                     Text::new("Action Bucket 1"),
                     observe(|_activate: On<Activate> | {
@@ -173,8 +183,7 @@ impl LobbyPlugin {
                     }),
                 ));
                 parent.spawn((
-                    Node { ..default() },
-                    Button,
+                    Self::spawn_button_node(),
                     Name::new("ActionBucket2"),
                     Text::new("Action Bucket 2"),
                     observe(|_activate: On<Activate> | {
@@ -182,8 +191,7 @@ impl LobbyPlugin {
                     }),
                 ));
                 parent.spawn((
-                    Node { ..default() },
-                    Button,
+                    Self::spawn_button_node(),
                     Name::new("ActionBucket3"),
                     Text::new("Action Bucket 3"),
                     observe(|_activate: On<Activate> | {
@@ -191,8 +199,7 @@ impl LobbyPlugin {
                     }),
                 ));
                 parent.spawn((
-                    Node { ..default() },
-                    Button,
+                    Self::spawn_button_node(),
                     Name::new("ActionBucket4"),
                     Text::new("Action Bucket 4"),
                     observe(|_activate: On<Activate> | {
@@ -262,7 +269,7 @@ impl LobbyPlugin {
                     Val::Px(20.),
                     Val::Px(20.),
                 ),
-                ..default() 
+                ..default()
             },
             BackgroundColor(BUTTON_BACKGROUND),
             Hovered::default(),

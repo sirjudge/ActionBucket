@@ -25,6 +25,7 @@ pub struct Lobby {
     pub total_players_allowed_in_game: i8,
     pub game_type: MatchEndConditionType,
     pub port_player_map: HashMap<PlayerPort, Option<Player>>,
+    pub hosting_port: PlayerPort,
 }
 
 impl Display for Lobby {
@@ -61,13 +62,16 @@ impl Lobby {
             total_players_allowed_in_game: MAX_PLAYERS_IN_GAME,
             game_type: MatchEndConditionType::Lives,
             port_player_map: HashMap::new(),
+            //NOTE: This default setting is always assuming the first player
+            //will ALWAYS be in port 1
+            hosting_port: PlayerPort::One,
         }
     }
 
     pub fn find_first_available_port(&mut self) -> Option<PlayerPort> {
         if self.port_player_map.is_empty() {
             warn!("Player list is currently uninitialized");
-            self.initialize_player_list();
+            self.initialize_port_mapping();
         }
 
         PlayerPort::iter().find(|port| {
@@ -136,6 +140,13 @@ impl Lobby {
     }
 
     pub(crate) fn disconnect_player_from_port(&mut self, player_port: &PlayerPort) {
+        if player_port == &self.hosting_port {
+            error!(
+                "Current player is hosting the lobby and the functionality to pass along the lobby to a new player is not yet implemented"
+            );
+            return;
+        }
+
         self.port_player_map
             .entry(player_port.clone())
             .and_modify(|player| {
@@ -144,7 +155,7 @@ impl Lobby {
     }
 
     //TODO: probably bad idea to make this public but might be fine for now?
-    pub(crate) fn initialize_player_list(&mut self) {
+    pub(crate) fn initialize_port_mapping(&mut self) {
         let max_players_usize = usize::try_from(MAX_PLAYERS_IN_LOBBY).unwrap_or_else(|error| {
             warn!(
                 "error occurred parsing max players in lobby const:{:?}",
@@ -205,7 +216,7 @@ mod game_lobby_struct_test {
     fn lobby_initialization_method_successfully_inits_ports_with_no_players() {
         let mut lobby = Lobby::default();
         assert!(lobby.port_player_map.is_empty());
-        lobby.initialize_player_list();
+        lobby.initialize_port_mapping();
         assert!(!lobby.port_player_map.is_empty());
         assert!(lobby.port_player_map.keys().count() > 0);
     }
@@ -213,7 +224,7 @@ mod game_lobby_struct_test {
     #[test]
     fn find_first_available_port() {
         let mut lobby = Lobby::default();
-        lobby.initialize_player_list();
+        lobby.initialize_port_mapping();
         match lobby.find_first_available_port() {
             Some(port) => {
                 assert!(port == PlayerPort::One);
@@ -237,7 +248,7 @@ mod game_lobby_struct_test {
     #[test]
     fn add_player_to_empty_list_sets_first_port() {
         let mut lobby = Lobby::default();
-        lobby.initialize_player_list();
+        lobby.initialize_port_mapping();
         let player = Player::default();
         lobby.add_player_to_list(&player);
 

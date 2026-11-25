@@ -1,5 +1,5 @@
 use crate::{SceneState, game::state::GameState};
-use crate::scenes::SceneSwapMessage;
+use crate::systems::SceneSwapMessage;
 use bevy::{
     prelude::*,
     ui_widgets::{Activate, Button, observe},
