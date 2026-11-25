@@ -1,7 +1,5 @@
 use crate::{
-    SceneState,
-    game::state::GameState,
-    systems::{in_game::InGamePlugin, lobby_client::LobbyPlugin, main_menu::MainMenuPlugin},
+    SceneState, game::state::GameState, systems::{in_game::InGamePlugin, lobby_client::LobbyPlugin, lobby_server::{ServerAction, ServerStateMessage}, main_menu::MainMenuPlugin},
 };
 use bevy::prelude::*;
 
@@ -45,6 +43,7 @@ fn swap_message_reader(
     lobby_query: Query<&LobbyPlugin>,
     in_game_query: Query<&InGamePlugin>,
     mut commands: Commands,
+    mut server_state_message_writer: MessageWriter<ServerStateMessage>,
 ) {
     for message in message_reader.read() {
         // if we have the same states don't swap
@@ -73,8 +72,11 @@ fn swap_message_reader(
         match message.next_state {
             SceneState::CreateLobby => {
                 info!("Creating lobby. . .beep boop. . .");
-                // Need to init the lobby here
-                info!("Lobby created");
+                server_state_message_writer.write(ServerStateMessage { 
+                   server_action: ServerAction::Start 
+                });
+                info!("Sent server start message");
+                //TODO: maybe do some kind of wait until spawning finishes? not sure
                 next_scene_state.set(SceneState::InLobby);
                 next_game_state.set(GameState::Menu);
             }

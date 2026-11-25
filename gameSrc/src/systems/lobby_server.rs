@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-
 use crate::{
     game::{fighter::Fighter, state::SceneState},
     lobby::{
@@ -18,6 +17,7 @@ pub struct PlayerCharacterChangeMessage {
     player_port: PlayerPort,
     fighter: Fighter,
 }
+
 #[derive(Message)]
 pub struct PlayerConnectionMessage {
     player: Player,
@@ -34,7 +34,13 @@ pub enum ServerState {
 
 #[derive(Message)]
 pub struct ServerStateMessage {
-    pub next_state: ServerState,
+    pub server_action: ServerAction,
+}
+
+#[derive(Debug)]
+pub enum ServerAction {
+    Start,
+    Stop,
 }
 
 //TODO: Need to come back and start filling this in. The lobby scene should be responsible for
@@ -53,12 +59,10 @@ impl Plugin for ServerPlugin {
         app.add_message::<PlayerConnectionMessage>()
             .add_message::<PlayerCharacterChangeMessage>();
 
-        // app.add_systems(PostStartup, Self::init_lobby_post_startup);
-
         app.add_systems(
             Update,
             (
-                Self::player_event_reader,
+                Self::player_connection_message_reader,
                 Self::player_character_change_reader,
             )
                 .run_if(in_state(SceneState::InLobby)),
@@ -76,26 +80,45 @@ impl ServerPlugin {
         mut lobby_resource: ResMut<Lobby>,
     ) {
         for message in state_reader.read() {
-            if current_server_state.eq(&message.next_state) {
-                return;
-            }
-
-            match message.next_state {
-                ServerState::Initializing => {
-                    lobby_resource.initialize_port_mapping();
+            info!("Got server action message to do action:{:?}", message.server_action);
+            match current_server_state.get() {
+                ServerState::Stopped => match message.server_action {
+                    ServerAction::Start => {
+                        next_server_state.set(ServerState::Initializing);
+                        lobby_resource.initialize_port_mapping();
+                        next_server_state.set(ServerState::Started);
+                    }
+                    ServerAction::Stop => {
+                        info!(
+                            "Server already in stopped state, no need to stop again. Returning early"
+                        );
+                        return;
+                    }
+                },
+                ServerState::Started => match message.server_action {
+                    ServerAction::Start => {
+                        info!(
+                            "Server already in started state, no need to start again. Returning early"
+                        );
+                        return;
+                    }
+                    ServerAction::Stop => {
+                        next_server_state.set(ServerState::Stopping);
+                        todo!("Need to despawn and stop stuff");
+                        next_server_state.set(ServerState::Stopped);
+                    }
+                },
+                _ => {
+                    info!(
+                        "current server state in action state, no work needed:{:?}",
+                        current_server_state.get()
+                    );
                 }
-                ServerState::Stopping => {
-                }
-                // ServerState::Started => todo!(),
-                // ServerState::Stopped => todo!(),
-                _ => todo!()
             }
-
-            next_server_state.set(message.next_state);
         }
     }
 
-    fn player_event_reader(
+    fn player_connection_message_reader(
         mut connection_message_reader: MessageReader<PlayerConnectionMessage>,
         mut lobby: ResMut<Lobby>,
     ) {
@@ -113,7 +136,7 @@ impl ServerPlugin {
                         "Processing player disconnection for player:{:?}",
                         message.player
                     );
-                    match lobby.disconnect_player_by_player(&message.player) {
+                    match lobby.disconnect_player_with_player(&message.player) {
                         Ok(_) => {
                             info!("Successfully disconnected player from lobby");
                         }

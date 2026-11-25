@@ -70,8 +70,8 @@ impl Lobby {
 
     pub fn find_first_available_port(&mut self) -> Option<PlayerPort> {
         if self.port_player_map.is_empty() {
-            warn!("Player list is currently uninitialized");
-            self.initialize_port_mapping();
+            error!("Player list is currently uninitialized");
+            return None
         }
 
         PlayerPort::iter().find(|port| {
