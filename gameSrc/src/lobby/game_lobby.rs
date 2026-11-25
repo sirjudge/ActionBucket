@@ -102,7 +102,7 @@ impl Lobby {
         }
     }
 
-    pub(crate) fn disconnect_player_by_player(
+    pub(crate) fn disconnect_player_with_player(
         &mut self,
         player_to_disconnect: &Player,
     ) -> Result<(), &str> {
@@ -129,7 +129,7 @@ impl Lobby {
                 }
                 match port_to_disconnect {
                     Some(found_port) => {
-                        self.disconnect_player_from_port(&found_port);
+                        self.disconnect_player_with_port(&found_port);
                         Ok(())
                     }
                     None => Err("Could not find port to disconnect player from"),
@@ -139,7 +139,7 @@ impl Lobby {
         }
     }
 
-    pub(crate) fn disconnect_player_from_port(&mut self, player_port: &PlayerPort) {
+    pub(crate) fn disconnect_player_with_port(&mut self, player_port: &PlayerPort) {
         if player_port == &self.hosting_port {
             error!(
                 "Current player is hosting the lobby and the functionality to pass along the lobby to a new player is not yet implemented"
@@ -154,8 +154,13 @@ impl Lobby {
             });
     }
 
-    //TODO: probably bad idea to make this public but might be fine for now?
     pub(crate) fn initialize_port_mapping(&mut self) {
+        //TODO: Need to add a unit test for this case
+        if self.port_player_map.is_empty() {
+            error!("Port mapping table is already initailzied and is non-empty, returning early");
+            return;
+        }
+
         let max_players_usize = usize::try_from(MAX_PLAYERS_IN_LOBBY).unwrap_or_else(|error| {
             warn!(
                 "error occurred parsing max players in lobby const:{:?}",
@@ -272,9 +277,17 @@ mod game_lobby_struct_test {
     }
 
     //TODO: need to add the following unit tests
+    
     //adding player to full lobby
+    
     //adding player to uninitialized player list
+    
     //disconnecting player with ID not in player list
+    
     //disconnecting player with ID in player list
+    
     //disconnecting player by port
+
+    // trying to initialize_port_mapping when already initialized returns in no error and also ends
+    // early without re-setting everything
 }

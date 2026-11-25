@@ -1,16 +1,16 @@
 use crate::{
     SceneState,
     game::state::GameState,
-    systems::{in_game::InGamePlugin, in_lobby::LobbyPlugin, main_menu::MainMenuPlugin},
+    systems::{in_game::InGamePlugin, lobby_client::LobbyPlugin, main_menu::MainMenuPlugin},
 };
 use bevy::prelude::*;
 
 pub mod debug;
 pub mod in_game;
-pub mod in_lobby;
+pub mod lobby_client;
 pub mod main_menu;
 pub mod palette;
-pub mod server;
+pub mod lobby_server;
 
 #[derive(Message)]
 pub struct SceneSwapMessage {
@@ -73,8 +73,7 @@ fn swap_message_reader(
         match message.next_state {
             SceneState::CreateLobby => {
                 info!("Creating lobby. . .beep boop. . .");
-                //TODO: Do networking things here to make lobby joinable by friends or support
-                //for now just worry about spawning stuff locally
+                // Need to init the lobby here
                 info!("Lobby created");
                 next_scene_state.set(SceneState::InLobby);
                 next_game_state.set(GameState::Menu);

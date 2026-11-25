@@ -30,7 +30,7 @@ impl FightResource {
 
         let random_id = rngeesus::generate_rand_i16(1, 4);
         match self.fighter_list.get(&random_id) {
-            Some(fighter) => fighter.clone(),
+            Some(fighter) => *fighter,
             None => {
                 panic!("Could not find chosen fighter in fighter list")
             }

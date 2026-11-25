@@ -3,8 +3,8 @@ use bevy::prelude::*;
 use crate::{
     game::state::{GameState, SceneState},
     systems::{
-        MenuSwapPlugin, debug::DebugPlugin, in_game::InGamePlugin, in_lobby::LobbyPlugin,
-        main_menu::MainMenuPlugin,
+        MenuSwapPlugin, debug::DebugPlugin, in_game::InGamePlugin, lobby_client::LobbyPlugin,
+        lobby_server::ServerPlugin, main_menu::MainMenuPlugin,
     },
 };
 
@@ -12,6 +12,7 @@ pub mod game;
 pub mod infra;
 pub mod lobby;
 pub mod systems;
+pub mod ui;
 
 fn main() -> AppExit {
     App::new().add_plugins(AppPlugin).run()
@@ -43,6 +44,7 @@ impl Plugin for AppPlugin {
             MenuSwapPlugin,
             InGamePlugin,
             DebugPlugin,
+            ServerPlugin,
         ));
 
         app.configure_sets(Update, (AppSystems::Update,).chain());

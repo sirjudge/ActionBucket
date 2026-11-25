@@ -1,8 +1,10 @@
-use crate::{SceneState, game::state::GameState};
-use crate::systems::SceneSwapMessage;
+use crate::{
+    SceneState, game::state::GameState, systems::SceneSwapMessage, ui::components::spawn_button,
+};
 use bevy::{
+    app::AppExit,
     prelude::*,
-    ui_widgets::{Activate, Button, observe},
+    ui_widgets::{Activate, observe},
 };
 
 #[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
@@ -20,6 +22,18 @@ pub struct MainMenuPlugin;
 #[derive(Component)]
 pub struct MainMenuUi;
 
+#[derive(Component)]
+struct NewLobbyButton;
+
+#[derive(Component)]
+struct JoinLobbyButton;
+
+#[derive(Component)]
+struct SettingButton;
+
+#[derive(Component)]
+struct QuitToDesktopButton;
+
 impl Plugin for MainMenuPlugin {
     fn build(&self, app: &mut App) {
         app.insert_state(CurrentlySelectedOption::NewLobby)
@@ -32,7 +46,7 @@ impl MainMenuPlugin {
         mut commands: Commands,
         interface_state: ResMut<State<SceneState>>,
         menu_query: Query<Entity, With<MainMenuUi>>,
-        mut game_state: ResMut<NextState<GameState>>
+        mut game_state: ResMut<NextState<GameState>>,
     ) {
         match menu_query.single() {
             Ok(menu) => {
@@ -66,60 +80,58 @@ impl MainMenuPlugin {
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
                     flex_direction: FlexDirection::Column,
+                    column_gap: px(5),
+                    row_gap: px(5),
                     ..default()
                 },
                 MainMenuUi,
             ))
             .with_children(|parent| {
                 parent.spawn((
-                Button,
-                Text::new("New Lobby"),
-                observe(
-                    |_activate: On<Activate>,
-                     mut message_writer: MessageWriter<SceneSwapMessage>| {
-                        info!("New Lobby button pushed");
-                        let message = SceneSwapMessage::new(SceneState::CreateLobby);
-                        message_writer.write(message);
-                    },
-                ),
-                Node { ..default() },
-            ));
+                        NewLobbyButton,
+                        spawn_button("New Lobby"),
+                        observe(
+                            |_activate: On<Activate>,
+                            mut message_writer: MessageWriter<SceneSwapMessage>| {
+                                let message = SceneSwapMessage::new(SceneState::CreateLobby);
+                                message_writer.write(message);
+                            },
+                        ),
+                ));
 
                 parent.spawn((
-                Button,
-                Text::new("Join Lobby"),
-                observe(
-                    |_activate: On<Activate>,
-                     mut message_writer: MessageWriter<SceneSwapMessage>| {
-                        info!("Join Lobby button pushed");
-                        let message = SceneSwapMessage::new(SceneState::JoinLobby);
-                        message_writer.write(message);
-                    },
-                ),
-                Node { ..default() },
-            ));
+                        JoinLobbyButton,
+                        spawn_button("Join Lobby"),
+                        observe(
+                            |_activate: On<Activate>,
+                            mut message_writer: MessageWriter<SceneSwapMessage>| {
+                                let message = SceneSwapMessage::new(SceneState::JoinLobby);
+                                message_writer.write(message);
+                            },
+                        ),
+                ));
 
                 parent.spawn((
-                Button,
-                Text::new("Settings"),
-                observe(
-                    |_activate: On<Activate>,
-                     mut message_writer: MessageWriter<SceneSwapMessage>| {
-                        info!("Settinsg button pushed");
-                        let message = SceneSwapMessage::new(SceneState::Settings);
-                        message_writer.write(message);
-                    },
-                ),
-                Node { ..default() },
-            ));
+                        SettingButton,
+                        spawn_button("Settings"),
+                        observe(
+                            |_activate: On<Activate>,
+                            mut message_writer: MessageWriter<SceneSwapMessage>| {
+                                let message = SceneSwapMessage::new(SceneState::Settings);
+                                message_writer.write(message);
+                            },
+                        ),
+                ));
 
                 parent.spawn((
-                    Button,
-                    Text::new("Quit to Desktop"),
-                    observe(|_activate: On<Activate>| {
-                        info!("Quit to Desktop button pushed");
-                    }),
-                    Node { ..default() },
+                    spawn_button("Quit to Desktop"),
+                    QuitToDesktopButton,
+                    observe(
+                        |_activate: On<Activate>, mut message_writer: MessageWriter<AppExit>| {
+                            info!("Quit to Desktop button pushed");
+                            message_writer.write(AppExit::Success);
+                        },
+                    ),
                 ));
             });
     }
