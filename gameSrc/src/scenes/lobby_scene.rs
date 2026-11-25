@@ -1,28 +1,12 @@
 use crate::{
-    SceneState,
-    game::fighter::Fighter,
-    lobby::{
+    SceneState, game::fighter::Fighter, lobby::{
         game_lobby::Lobby,
         player::{Player, PlayerPort},
-    },
-    scenes::SceneSwapMessage,
+    }, scenes::{SceneSwapMessage, pallette::{BORDER_COLOR, BUTTON_TEXT, BUTTON_BACKGROUND, BUTTON_HOVERED_BACKGROUND, BUTTON_PRESSED_BACKGROUND}},
 };
 use bevy::{
-    prelude::*,
-    ui_widgets::{Activate, Button, observe},
+    picking::hover::Hovered, prelude::*, ui::BoxSizing::BorderBox, ui_widgets::{Activate, Button, observe},
 };
-
-//TODO: this was from old implemetnation before I updated how I was doing
-//lobby and player stuff
-// #[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
-// pub enum CurrentFighterOption {
-//     #[default]
-//     Random = 0,
-//     BucketOne = 1,
-//     BucketTwo = 2,
-//     BucketThree = 3,
-//     BucketFour = 4,
-// }
 
 #[derive(Component)]
 pub struct LobbyPlugin;
@@ -33,7 +17,8 @@ pub struct LobbyUi;
 impl Plugin for LobbyPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource::<Lobby>(Lobby::default())
-            .add_message::<PlayerConnectionMessage>();
+            .add_message::<PlayerConnectionMessage>()
+            .add_message::<PlayerCharacterChangeMessage>();
 
         app.add_systems(PostStartup, Self::init_lobby_post_startup);
         app.add_systems(Update, Self::display_toggle_on_state_update);
@@ -171,6 +156,8 @@ impl LobbyPlugin {
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
                     flex_direction: FlexDirection::Column,
+                    row_gap: px(10),
+                    column_gap: px(10),
                     ..default()
                 },
                 LobbyUi,
@@ -220,12 +207,13 @@ impl LobbyPlugin {
                         align_items: AlignItems::Center,
                         justify_content: JustifyContent::Center,
                         flex_direction: FlexDirection::Row,
+                        row_gap: px(10),
+                        column_gap: px(10),
                         ..default()
                     },))
                     .with_children(|parent| {
                         parent.spawn((
-                            Node { ..default() },
-                            Button,
+                            Self::spawn_button_node(),
                             Name::new("StartGameButton"),
                             Text::new("Start Game"),
                             observe(|_activate: On<Activate>, mut message_writer: MessageWriter<SceneSwapMessage> | {
@@ -236,9 +224,8 @@ impl LobbyPlugin {
                         ));
 
                         parent.spawn((
-                            Node { ..default() },
-                            Button,
-                            Name::new("SettingsButton"),
+                            Self::spawn_button_node(),
+                            Name::new("MatchSettingsButton"),
                             Text::new("Change Match Settings"),
                             observe(|_activate: On<Activate>, mut message_writer: MessageWriter<SceneSwapMessage> | {
                                 info!("settings button pushed");
@@ -248,8 +235,7 @@ impl LobbyPlugin {
                         ));
 
                         parent.spawn((
-                            Node { ..default() },
-                            Button,
+                            Self::spawn_button_node(),
                             Name::new("QuitToMenuButton"),
                             Text::new("Quit To Main Menu"),
                             observe(|_activate: On<Activate>, mut message_writer: MessageWriter<SceneSwapMessage> | {
@@ -264,5 +250,29 @@ impl LobbyPlugin {
             next_state: SceneState::InLobby,
         });
         info!("Successfully ran spawn in lobby ui to completion");
+    }
+
+    fn spawn_button_node() -> impl Bundle {
+        (
+            Node {
+                border: UiRect::all(Val::Px(2.)),
+                border_radius: BorderRadius::new(
+                    Val::Px(20.),
+                    Val::Px(20.),
+                    Val::Px(20.),
+                    Val::Px(20.),
+                ),
+                ..default() 
+            },
+            BackgroundColor(BUTTON_BACKGROUND),
+            Hovered::default(),
+            BorderColor {
+                top: BORDER_COLOR,
+                bottom: BORDER_COLOR,
+                left: BORDER_COLOR,
+                right: BORDER_COLOR,
+            },
+            Button,
+        )
     }
 }
