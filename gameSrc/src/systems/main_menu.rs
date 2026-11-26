@@ -107,6 +107,7 @@ impl MainMenuPlugin {
                             mut message_writer: MessageWriter<SceneSwapMessage>| {
                                 let message = SceneSwapMessage::new(SceneState::JoinLobby);
                                 message_writer.write(message);
+                                //TODO: need to do lobby connection stuff
                             },
                         ),
                 ));

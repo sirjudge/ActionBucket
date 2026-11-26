@@ -31,6 +31,10 @@ pub struct Lobby {
     // I think this is a fine trade off
     pub local_ports: Vec<PlayerPort>,
     pub remote_ports: Vec<PlayerPort>,
+    //TODO: need to add this at a later point
+    pub lobby_id: Uuid,
+    pub lobby_password: Option<String>
+
 }
 
 impl Display for Lobby {
@@ -71,7 +75,7 @@ impl Display for Lobby {
 
 impl Lobby {
     pub(crate) fn default() -> Self {
-        Self {
+        let mut return_lobby = Lobby {
             total_players_allowed_in_lobby: MAX_PLAYERS_IN_LOBBY,
             total_players_allowed_in_game: MAX_PLAYERS_IN_GAME,
             game_type: MatchEndConditionType::Lives,
@@ -81,7 +85,19 @@ impl Lobby {
             hosting_port: PlayerPort::One,
             local_ports: Vec::new(),
             remote_ports: Vec::new(),
+            lobby_id: Uuid::new_v4(),
+            lobby_password: None
+        };
+
+        return_lobby.initialize_port_mapping();
+        return return_lobby;
+    }
+
+    pub fn update_password(&mut self, password: &str){
+        if password.is_empty() {
+            warn!("Password field is empty");
         }
+        self.lobby_password = Some(password.to_string());
     }
 
     pub fn find_first_available_port(&mut self) -> Option<PlayerPort> {
@@ -189,10 +205,10 @@ impl Lobby {
             });
     }
 
-    pub(crate) fn initialize_port_mapping(&mut self) {
+    fn initialize_port_mapping(&mut self) {
         //TODO: Need to add a unit test for this case
         if self.port_player_map.is_empty() {
-            error!("Port mapping table is already initailzied and is non-empty, returning early");
+            error!("Port mapping table is already initialized and is non-empty, returning early");
             return;
         }
 
@@ -246,9 +262,9 @@ mod game_lobby_struct_test {
     #[test]
     fn lobby_default_init_successul() {
         let lobby = Lobby::default();
-        assert!(lobby.total_players_allowed_in_game == MAX_PLAYERS_IN_GAME);
-        assert!(lobby.total_players_allowed_in_lobby == MAX_PLAYERS_IN_LOBBY);
-        assert!(lobby.game_type == MatchEndConditionType::Lives);
+        assert_eq!(lobby.total_players_allowed_in_game,MAX_PLAYERS_IN_GAME);
+        assert_eq!(lobby.total_players_allowed_in_lobby, MAX_PLAYERS_IN_LOBBY);
+        assert_eq!(lobby.game_type, MatchEndConditionType::Lives);
         assert!(lobby.port_player_map.is_empty());
     }
 
@@ -256,7 +272,6 @@ mod game_lobby_struct_test {
     fn lobby_initialization_method_successfully_inits_ports_with_no_players() {
         let mut lobby = Lobby::default();
         assert!(lobby.port_player_map.is_empty());
-        lobby.initialize_port_mapping();
         assert!(!lobby.port_player_map.is_empty());
         assert!(lobby.port_player_map.keys().count() > 0);
     }
@@ -264,10 +279,9 @@ mod game_lobby_struct_test {
     #[test]
     fn find_first_available_port() {
         let mut lobby = Lobby::default();
-        lobby.initialize_port_mapping();
         match lobby.find_first_available_port() {
             Some(port) => {
-                assert!(port == PlayerPort::One);
+                assert_eq!(port, PlayerPort::One, "expected open port to be player 1 but found {:?}", port);
             }
             None => {
                 panic!("expected to find open port but returned none instead");
@@ -287,10 +301,17 @@ mod game_lobby_struct_test {
 
     #[test]
     fn add_local_player_to_empty_list_sets_first_port() {
+        // initialize lobby
         let mut lobby = Lobby::default();
-        lobby.initialize_port_mapping();
+
+        // add player to lobby as local connection
         let player = Player::default();
         lobby.add_player_to_list(&player, &PlayerConnectionType::Local);
+
+        assert!(!lobby.local_ports.is_empty(), "expected local port mappings to not be empty");
+        assert_eq!(lobby.local_ports.len(),1, "expected local port length of 1 but was {:?} instead", lobby.local_ports.len());
+
+
 
         match lobby.port_player_map.get(&PlayerPort::One) {
             Some(player_option) => {
@@ -309,6 +330,16 @@ mod game_lobby_struct_test {
                 panic!("expected to find port 1 in hash map keys but was not found");
             }
         }
+    }
+
+    #[test]
+    fn password_spawns_empty_and_sets_successfully(){
+        let mut lobby = Lobby::default();
+       assert!( lobby.lobby_password.is_none());
+       lobby.update_password("test string");
+       if let Some(password) = lobby.lobby_password {
+           assert_eq!(password,"test string");
+       }
     }
 
     //TODO: need to add the following unit tests

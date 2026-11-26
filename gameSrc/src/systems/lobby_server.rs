@@ -76,7 +76,6 @@ impl ServerPlugin {
         mut state_reader: MessageReader<ServerStateMessage>,
         current_server_state: Res<State<ServerState>>,
         mut next_server_state: ResMut<NextState<ServerState>>,
-        mut lobby_resource: ResMut<Lobby>,
     ) {
         for message in state_reader.read() {
             info!("Got server action message to do action:{:?}", message.server_action);
@@ -84,7 +83,7 @@ impl ServerPlugin {
                 ServerState::Stopped => match message.server_action {
                     ServerAction::Start => {
                         next_server_state.set(ServerState::Initializing);
-                        lobby_resource.initialize_port_mapping();
+                        //TODO: Do server stuff here maybe
                         next_server_state.set(ServerState::Started);
                     }
                     ServerAction::Stop => {

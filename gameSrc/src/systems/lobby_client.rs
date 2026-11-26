@@ -1,5 +1,11 @@
 use crate::{
-    SceneState, lobby::{lobby::Lobby, player::PlayerConnectionType}, systems::{SceneSwapMessage, lobby_server::{ConnectionAction, PlayerConnectionMessage}}, ui::components::spawn_button,
+    SceneState,
+    lobby::{lobby::Lobby, player::PlayerConnectionType},
+    systems::{
+        SceneSwapMessage,
+        lobby_server::{ConnectionAction, PlayerConnectionMessage},
+    },
+    ui::components::spawn_button,
 };
 use bevy::{
     prelude::*,
@@ -167,19 +173,14 @@ impl LobbyPlugin {
 
                                 for index in 0..lobby.local_ports.len() {
                                     let player_port_to_disconnect = &lobby.local_ports[index];
-                                    match  lobby.port_player_map.get(player_port_to_disconnect) {
-                                       Some(player_option) =>{
-                                           if let Some(player) = player_option {
-                                            let disconnect_message = PlayerConnectionMessage {
-                                                player: player.clone(),
-                                                connection_message_type: ConnectionAction::Disconnect,
-                                                connection_type: PlayerConnectionType::Local
-                                             };
-                                            player_connection_message_writer.write(disconnect_message);
-                                           }
+                                    if let Some(player_option) = lobby.port_player_map.get(player_port_to_disconnect) && let Some(player) = player_option {
+                                        let disconnect_message = PlayerConnectionMessage {
+                                            player: player.clone(),
+                                            connection_message_type: ConnectionAction::Disconnect,
+                                            connection_type: PlayerConnectionType::Local
+                                         };
+                                        player_connection_message_writer.write(disconnect_message);
                                        }
-                                       None =>{}
-                                    }
                                 }
 
                                 scene_swap_message_writer.write(SceneSwapMessage {next_state:SceneState:: MainMenu});
