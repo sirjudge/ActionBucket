@@ -31,7 +31,7 @@ pub struct Lobby {
 impl Display for Lobby {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let connection_limit_string = format!(
-            "lobby player cap: {} in game player cap:{}",
+            "lobby player cap: {} game player cap:{} ",
             self.total_players_allowed_in_lobby, self.total_players_allowed_in_game
         );
         let player_list_details_string = format!(
@@ -40,13 +40,20 @@ impl Display for Lobby {
         );
 
         let mut player_list_string: String = Default::default();
-        for player in self.port_player_map.iter() {
-            player_list_string += &format!("{:?}, ", player);
+        for (port, player_option) in self.port_player_map.iter() {
+            match player_option {
+                Some(player) => {
+                    player_list_string += &format!("port:{:?} player:{:?}", port, player)
+                }
+                None => {
+                    player_list_string += &format!("port:{:?} has no player", port);
+                }
+            }
         }
 
         write!(
             f,
-            "{},{},{}, {}",
+            "{}\n,{}\n,{}\n, {}\n",
             connection_limit_string,
             player_list_details_string,
             stringify!(game_type),
@@ -71,7 +78,7 @@ impl Lobby {
     pub fn find_first_available_port(&mut self) -> Option<PlayerPort> {
         if self.port_player_map.is_empty() {
             error!("Player list is currently uninitialized");
-            return None
+            return None;
         }
 
         PlayerPort::iter().find(|port| {
@@ -277,15 +284,15 @@ mod game_lobby_struct_test {
     }
 
     //TODO: need to add the following unit tests
-    
+
     //adding player to full lobby
-    
+
     //adding player to uninitialized player list
-    
+
     //disconnecting player with ID not in player list
-    
+
     //disconnecting player with ID in player list
-    
+
     //disconnecting player by port
 
     // trying to initialize_port_mapping when already initialized returns in no error and also ends

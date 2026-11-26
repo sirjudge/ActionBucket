@@ -5,7 +5,7 @@ use crate::{
         state::GameState,
     },
     infra::rngeesus,
-    lobby::game_lobby::Lobby,
+    lobby::lobby::Lobby,
 };
 use bevy::prelude::*;
 use std::collections::{HashMap, VecDeque};

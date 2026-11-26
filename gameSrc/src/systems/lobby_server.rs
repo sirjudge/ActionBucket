@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use crate::{
     game::{fighter::Fighter, state::SceneState},
     lobby::{
-        game_lobby::Lobby,
+        lobby::Lobby,
         player::{Player, PlayerPort},
     },
 };

@@ -1,2 +1,2 @@
-pub mod game_lobby;
+pub mod lobby;
 pub mod player;
