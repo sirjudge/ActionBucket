@@ -110,7 +110,7 @@ impl DebugPlugin {
                         Node {
                             justify_content: JustifyContent::Start,
                             flex_direction: FlexDirection::Column,
-                            top: percent(10),
+                            bottom: percent(10),
                             right: percent(10),
                             position_type: PositionType::Absolute,
                             max_width: percent(25),

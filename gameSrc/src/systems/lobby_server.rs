@@ -1,27 +1,26 @@
 use bevy::prelude::*;
 use crate::{
-    game::{fighter::Fighter, state::SceneState},
-    lobby::{
-        lobby::Lobby,
-        player::{Player, PlayerPort},
+    game::{fighter::Fighter, state::SceneState}, lobby::{
+        lobby::Lobby, player::{Player, PlayerConnectionType, PlayerPort},
     },
 };
 
-pub enum ConnectionMessageType {
+pub enum ConnectionAction {
     Connect,
     Disconnect,
 }
 
 #[derive(Message)]
 pub struct PlayerCharacterChangeMessage {
-    player_port: PlayerPort,
-    fighter: Fighter,
+    pub player_port: PlayerPort,
+    pub fighter: Fighter,
 }
 
 #[derive(Message)]
 pub struct PlayerConnectionMessage {
-    player: Player,
-    connection_message_type: ConnectionMessageType,
+    pub player: Player,
+    pub connection_message_type: ConnectionAction,
+    pub connection_type: PlayerConnectionType
 }
 
 #[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash)]
@@ -124,14 +123,14 @@ impl ServerPlugin {
     ) {
         for message in connection_message_reader.read() {
             match message.connection_message_type {
-                ConnectionMessageType::Connect => {
+                ConnectionAction::Connect => {
                     info!(
                         "Processing player connection for player:{:?}",
                         message.player
                     );
-                    lobby.add_player_to_list(&message.player);
+                    lobby.add_player_to_list(&message.player, &message.connection_type);
                 }
-                ConnectionMessageType::Disconnect => {
+                ConnectionAction::Disconnect => {
                     info!(
                         "Processing player disconnection for player:{:?}",
                         message.player

@@ -1,4 +1,4 @@
-use crate::lobby::player::{Player, PlayerPort};
+use crate::lobby::player::{Player, PlayerConnectionType, PlayerPort};
 use bevy::{platform::collections::HashMap, prelude::*};
 use std::fmt::Display;
 use strum::IntoEnumIterator;
@@ -26,6 +26,11 @@ pub struct Lobby {
     pub game_type: MatchEndConditionType,
     pub port_player_map: HashMap<PlayerPort, Option<Player>>,
     pub hosting_port: PlayerPort,
+    //TODO: need to come back and re-evalue this for now but
+    // since we don't have that many ports and rust is *fast*
+    // I think this is a fine trade off
+    pub local_ports: Vec<PlayerPort>,
+    pub remote_ports: Vec<PlayerPort>,
 }
 
 impl Display for Lobby {
@@ -43,10 +48,12 @@ impl Display for Lobby {
         for (port, player_option) in self.port_player_map.iter() {
             match player_option {
                 Some(player) => {
-                    player_list_string += &format!("port:{:?} player:{:?}", port, player)
+                    let player_string = format!("port:{:?} player:{:?}", port, player);
+                    player_list_string.push_str(&player_string);
                 }
                 None => {
-                    player_list_string += &format!("port:{:?} has no player", port);
+                    let no_player_string = format!("port:{:?} has no player", port);
+                    player_list_string.push_str(&no_player_string);
                 }
             }
         }
@@ -72,6 +79,8 @@ impl Lobby {
             //NOTE: This default setting is always assuming the first player
             //will ALWAYS be in port 1
             hosting_port: PlayerPort::One,
+            local_ports: Vec::new(),
+            remote_ports: Vec::new(),
         }
     }
 
@@ -86,10 +95,15 @@ impl Lobby {
         })
     }
 
-    pub(crate) fn add_player_to_list(&mut self, player: &Player) {
+    pub(crate) fn add_player_to_list(
+        &mut self,
+        player: &Player,
+        connection_type: &PlayerConnectionType,
+    ) {
         let port = Self::find_first_available_port(self);
         match port {
             Some(port) => {
+                // verify we don't already have a player connected to the returned port
                 if matches!(self.port_player_map.get(&port), Some(Some(_))) {
                     error!(
                         "Could not connect to Port {:?} because it's already occupied",
@@ -97,6 +111,20 @@ impl Lobby {
                     );
                     return;
                 }
+
+                // and add the port to the local or remote connection list
+                match connection_type {
+                    PlayerConnectionType::Unconnected =>{}
+                    PlayerConnectionType::Local =>{
+                        self.local_ports.push(port.clone());
+                    }
+                    PlayerConnectionType::Remote =>{
+                        self.remote_ports.push(port.clone());
+                    }
+                    PlayerConnectionType::Host => todo!()
+                }
+
+                // register the player to the port map 
                 self.port_player_map.entry(port).and_modify(|player_value| {
                     let mut updated_player = player.clone();
                     updated_player.player_connection_id = Some(Uuid::new_v4());
@@ -258,11 +286,11 @@ mod game_lobby_struct_test {
     }
 
     #[test]
-    fn add_player_to_empty_list_sets_first_port() {
+    fn add_local_player_to_empty_list_sets_first_port() {
         let mut lobby = Lobby::default();
         lobby.initialize_port_mapping();
         let player = Player::default();
-        lobby.add_player_to_list(&player);
+        lobby.add_player_to_list(&player, &PlayerConnectionType::Local);
 
         match lobby.port_player_map.get(&PlayerPort::One) {
             Some(player_option) => {

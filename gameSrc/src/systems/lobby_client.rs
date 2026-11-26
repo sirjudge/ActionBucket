@@ -1,5 +1,5 @@
 use crate::{
-    SceneState, systems::SceneSwapMessage, ui::components::spawn_button,
+    SceneState, lobby::{lobby::Lobby, player::PlayerConnectionType}, systems::{SceneSwapMessage, lobby_server::{ConnectionAction, PlayerConnectionMessage}}, ui::components::spawn_button,
 };
 use bevy::{
     prelude::*,
@@ -157,9 +157,34 @@ impl LobbyPlugin {
                             QuitToMainMenuButton,
                             spawn_button("Quit to Main Menu"),
                             Name::new("QuitToMenuButton"),
-                            observe(|_activate: On<Activate>, mut message_writer: MessageWriter<SceneSwapMessage> | {
+                            observe(|
+                                _activate: On<Activate>,
+                                mut scene_swap_message_writer: MessageWriter<SceneSwapMessage>,
+                                mut player_connection_message_writer: MessageWriter<PlayerConnectionMessage>,
+                                lobby: Res<Lobby>
+                            | {
                                 info!("quit to menu button pushed");
-                                message_writer.write(SceneSwapMessage {next_state:SceneState:: MainMenu});
+
+                                for index in 0..lobby.local_ports.len() {
+                                    let player_port_to_disconnect = &lobby.local_ports[index];
+                                    match  lobby.port_player_map.get(player_port_to_disconnect) {
+                                       Some(player_option) =>{
+                                           if let Some(player) = player_option {
+                                            let disconnect_message = PlayerConnectionMessage {
+                                                player: player.clone(),
+                                                connection_message_type: ConnectionAction::Disconnect,
+                                                connection_type: PlayerConnectionType::Local
+                                             };
+                                            player_connection_message_writer.write(disconnect_message);
+                                           }
+                                       }
+                                       None =>{}
+                                    }
+                                }
+
+                                scene_swap_message_writer.write(SceneSwapMessage {next_state:SceneState:: MainMenu});
+                                //TODO: need to see if locally connected player port is also
+                                //hosting the lobby and quit the server accordingly 
                             }),
                         ));
                     });
